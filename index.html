@@ -2,10 +2,12 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>JUGGLER風オリジナル完成版 (修正版)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<title>JUGGLER風オリジナル完成版 (スマホ対応・修正版)</title>
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:"Hiragino Sans","Yu Gothic",sans-serif;background:radial-gradient(circle at top,#3a0d62 0%,#19061f 48%,#050108 100%);color:#fff;min-height:100vh;padding:14px}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Hiragino Sans","Yu Gothic",sans-serif;background:radial-gradient(circle at top,#3a0d62 0%,#19061f 48%,#050108 100%);color:#fff;min-height:100vh;padding:14px;overscroll-behavior-y:none}
+button{touch-action:manipulation}
 .app{width:min(1120px,100%);margin:0 auto;background:linear-gradient(180deg,#111,#050505);border:4px solid #b88b31;border-radius:18px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.55);position:relative;transition:filter .22s ease}.app.blackout{filter:brightness(.18) saturate(.55)}
 .dashboard{background:linear-gradient(180deg,#16355f,#071624 65%,#05080d);border-bottom:3px solid #3e3e3e;padding:10px;display:grid;grid-template-columns:1.7fr .9fr;gap:10px}.panel{background:linear-gradient(180deg,rgba(38,83,137,.95),rgba(7,24,42,.95));border:2px solid #77a8d5;border-radius:10px;box-shadow:inset 0 0 16px rgba(255,255,255,.05)}
 .graph-panel{padding:8px;display:grid;grid-template-rows:auto 1fr auto;gap:8px;min-height:250px}.graph-head{display:flex;justify-content:space-between;align-items:center;gap:10px}.graph-title{display:inline-block;padding:4px 12px;border-radius:6px;background:linear-gradient(180deg,#2d6cb0,#0d2b54);border:1px solid #90caf7;font-weight:900;color:#eef8ff;letter-spacing:.05em}.graph-meta{font-size:12px;color:#d7ebff;opacity:.95}.graph-canvas-wrap{border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,.14);background:radial-gradient(circle at center,rgba(95,160,255,.08),transparent 45%),linear-gradient(180deg,rgba(0,0,0,.1),rgba(0,0,0,.28)),repeating-linear-gradient(to top,rgba(255,255,255,.06) 0 1px,transparent 1px 42px),repeating-linear-gradient(to right,rgba(255,255,255,.05) 0 1px,transparent 1px 50px)}#graphCanvas{width:100%;height:176px;display:block}
@@ -70,7 +72,7 @@
         <div class="center-buttons"><button id="stop0" class="stop-btn" disabled>STOP</button><button id="stop1" class="stop-btn" disabled>STOP</button><button id="stop2" class="stop-btn" disabled>STOP</button></div>
         <button class="bet-button" disabled>BET</button>
       </div>
-      <div id="message" class="message">完成版です。バグを修正し、図柄が正しく揃ったときのみボーナスになるよう調整しました。</div>
+      <div id="message" class="message">スマホ対応の最適化と、回転速度・中段チェリーの修正を行いました。</div>
       <div class="footer-actions"><button id="addCreditBtn" class="mini-action orange">クレジット+100</button><button id="resetBtn" class="mini-action pink">リセット</button></div>
     </div>
     <div class="side-art"><div>BONUS</div><div>CHANCE</div><div>PREMIUM</div></div>
@@ -140,7 +142,8 @@ const reelEls=[
 
 let state=loadState();
 let reels=reelEls.map((el,i)=>({
-  el,i,offset:0,raf:null,spinning:false,stopped:false,speed:11.4+i*.9,centerIndex:0,targetIndex:0
+  // 回転スピードをアップ（11.4 → 22 ベースに変更）
+  el,i,offset:0,raf:null,spinning:false,stopped:false,speed:22+i*1.5,centerIndex:0,targetIndex:0
 }));
 let round=null,inSpin=false,lit=false;
 
@@ -509,7 +512,6 @@ function stopReel(i){
       }
     }
   } else {
-    // ハズレのゲーム時の制御
     if (stopOrder.length === 1 && stopOrder[0] === 2) {
       if (idx === 1) idx = (idx + 1) % REELS[2].length; 
     }
@@ -534,7 +536,6 @@ function stopReel(i){
       }
     }
     
-    // 【修正】ハズレ時にボーナス図柄（7・BAR）がテンパイ・停止するのを積極的に回避
     let basicShift = 0;
     while((REELS[i][idx]==='seven' || REELS[i][idx]==='bar') && basicShift < 4){
       idx = (idx + 1) % REELS[i].length;
@@ -548,7 +549,6 @@ function stopReel(i){
 
   const stoppedCount = reels.filter(x=>x.stopped).length;
   
-  // 【修正】ハズレのゲームで絶対に「当たり目」や「リーチ目」が止まらないようにする最終防壁（キックアウト処理）
   if (stoppedCount === 3 && !state.bonusActive && !round.bonusReady && !(round && round.bonus)) {
     let res = evalLines();
     let checkAttempts = 0;
@@ -561,7 +561,7 @@ function stopReel(i){
       snapToIndex(i, idx);
       res = evalLines();
       checkAttempts++;
-      if (checkAttempts > 25) break; // 全マスをチェックして必ず回避
+      if (checkAttempts > 25) break; 
     }
   }
 
@@ -613,7 +613,8 @@ function evaluateCherry(){
   const result={payout:0,replay:0,cherryKind:null};
 
   if(left[1]==='cherry'){
-    result.payout+=1;
+    // 中段チェリーの払い出しを0枚に変更（上段BAR揃い等のリーチ目として扱うため）
+    result.payout+=0;
     result.cherryKind='中段チェリー';
     return result;
   }
@@ -638,7 +639,7 @@ function evalLines(){
   let payout=0, replay=0, bonusHit=null;
   const hitLines=[];
   let isFakeCombo = false;
-  let hasBarThree = false; // 【修正】BAR3つ揃い判定追加
+  let hasBarThree = false; 
 
   for(const p of paylines){
     const key=p.line.join(',');
@@ -680,7 +681,7 @@ function recordBonus(bp,premium){
     time:new Date().toLocaleString('ja-JP')
   });
   state.history=state.history.slice(0,20);
-  state.zoneLeft=JUGUREN_GAMES; // 10回転セット
+  state.zoneLeft=JUGUREN_GAMES; 
   if(premium) state.premiumCount++;
 }
 
@@ -796,7 +797,6 @@ function finishRound(){
     lamp('blue');
   }
 
-  // 【修正】リーチ目（BAR揃いやフェイクのズレ目）が成立した場合の処理（内部当選中のみ発生）
   if ((res.hasBarThree || res.isFakeCombo) && (state.bonusActive || (round && round.bonus))) {
     if (round && round.premium) {
       if (round.premiumType === 'mellow') lamp('premium-mellow');
@@ -814,7 +814,6 @@ function finishRound(){
     }
     setMsg(msg);
     
-    // チェリーなどの重複小役払い出し
     if (res.payout > 0) {
       state.credits += res.payout;
       state.coinDiff += res.payout;
@@ -824,10 +823,9 @@ function finishRound(){
     inSpin = false;
     saveState();
     updateUI();
-    return; // ボーナス消化には入らず次ゲームへ持ち越し
+    return; 
   }
 
-  // 実際のボーナス図柄（777 または 77BAR）が揃ったときのみボーナス消化へ突入
   if(res.bonusHit && (round.bonusReady || state.bonusActive)){
     const premium = round.premium && res.bonusHit.type==='BIG';
     recordBonus(res.bonusHit,premium);
@@ -874,7 +872,8 @@ function finishRound(){
       } else if(res.cherryKind==='連チェリー'){
         setMsg('連チェリー成立！ 2枚獲得。(2%のランプ点灯抽選は漏れました)');
       }else if(res.cherryKind==='中段チェリー'){
-        setMsg('中段チェリー成立！ 1枚獲得。');
+        // テキストを修正
+        setMsg('中段チェリー成立！');
       }else if(res.replay>0&&res.payout>0){
         setMsg(`${res.cherryKind?res.cherryKind+' / ':''}ブドウとリプレイが揃いました。`);
       }else if(res.replay>0){
