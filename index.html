@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-<title>甘ジャグ</title>
+<title>JUGGLER風オリジナル完成版 (中段チェリー完全救済＆1G連特化版)</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:"Hiragino Sans","Yu Gothic",sans-serif;background:radial-gradient(circle at top,#3a0d62 0%,#19061f 48%,#050108 100%);color:#fff;min-height:100vh;padding:14px;overscroll-behavior-y:none}
@@ -104,7 +104,7 @@ button{touch-action:manipulation}
         <button class="bet-button" disabled>BET</button>
       </div>
 
-      <div id="message" class="message">次ゲームでの不自然な滑りとフリーズの不具合を完全に解消しました。</div>
+      <div id="message" class="message">中段チェリーバグを完全修正！1G連ストック機能を搭載しました！</div>
 
       <div class="footer-actions">
         <button id="addCreditBtn" class="mini-action orange">クレジット+100</button>
@@ -117,7 +117,7 @@ button{touch-action:manipulation}
 </div>
 
 <script>
-const STORAGE_KEY='juggler_complete_v7';
+const STORAGE_KEY='juggler_complete_v8';
 const BET=3,NORMAL_DENOM=99,JUGUREN_DENOM=8,JUGUREN_GAMES=10,PREMIUM_RATE=0.20;
 
 const REELS=[
@@ -219,7 +219,8 @@ function loadState(){
     bonusActive:false,
     bonusPattern:null,
     bonusPremium:false,
-    bonusPremiumType:null
+    bonusPremiumType:null,
+    bonusStock:0
   };
   try{
     return {...d,...(JSON.parse(localStorage.getItem(STORAGE_KEY))||{})};
@@ -289,7 +290,7 @@ function updateUI(){
   premiumTextEl.textContent=`プレミア ${state.premiumCount}回`;
   segCreditEl.textContent=fmt3(state.credits);
   segPayEl.textContent=fmt3(state.lastPayout);
-  segZoneEl.textContent=fmt3(state.zoneLeft||state.replayStock);
+  segZoneEl.textContent=fmt3(state.zoneLeft||state.bonusStock);
   renderRecent();
   drawGraph();
   saveState();
@@ -349,36 +350,53 @@ function pick(arr){return arr[Math.floor(Math.random()*arr.length)]}
 function denomNow(){return state.zoneLeft>0?JUGUREN_DENOM:NORMAL_DENOM}
 
 function chooseRound(){
-  const isCherry = Math.floor(Math.random() * 20) === 0;
+  // 1/18でチェリー判定
+  const isCherry = Math.floor(Math.random() * 18) === 0;
   if (isCherry) {
-    const isHit = Math.random() < 0.05; // 5%でチェリー重複ボーナス
-    if (isHit) {
-      const bp = pick(BONUS_PATTERNS);
-      const premium = (bp.type==='BIG' && Math.random()<PREMIUM_RATE);
-      const isMid = Math.random() < 0.5; // 50%で中段チェリー
+    // チェリーの15%で最強の「中段チェリー（ボーナス確定・BIG確定）」
+    const isMid = Math.floor(Math.random() * 7) === 0;
+    if (isMid) {
+      const bp = BONUS_PATTERNS[0]; // BIG確定
       return {
         bonus:true,
-        premium,
-        premiumType:premium?pick(PREMIUM_TYPES):null,
-        lampTiming:'after3', // チェリー重複は必ず第3停止後告知
+        premium:true,
+        premiumType:pick(PREMIUM_TYPES),
+        lampTiming:'after3',
         bonusPattern:bp,
-        isMidCherry:isMid,
-        isConsecutiveCherry:!isMid,
+        isMidCherry:true,
+        isConsecutiveCherry:false,
         grape:false,
         bell:false
       };
     } else {
-      return {
-        bonus:false,
-        premium:false,
-        premiumType:null,
-        lampTiming:null,
-        bonusPattern:null,
-        isMidCherry:false,
-        isConsecutiveCherry:true,
-        grape:false,
-        bell:false
-      };
+      // 残りは角チェリー。そのうち12%でボーナス重複
+      const isHit = Math.random() < 0.12;
+      if (isHit) {
+        return {
+          bonus:true,
+          premium:false,
+          premiumType:null,
+          lampTiming:'after3',
+          bonusPattern:pick(BONUS_PATTERNS),
+          isMidCherry:false,
+          isConsecutiveCherry:true,
+          grape:false,
+          bell:false
+        };
+      } else {
+        // 非重複のただの角チェリー
+        return {
+          bonus:false,
+          premium:false,
+          premiumType:null,
+          lampTiming:null,
+          bonusPattern:null,
+          isMidCherry:false,
+          isConsecutiveCherry:true,
+          grape:false,
+          bell:false
+        };
+      }
     }
   }
 
@@ -387,17 +405,12 @@ function chooseRound(){
     const bp=pick(BONUS_PATTERNS);
     const premium=(bp.type==='BIG' && Math.random()<PREMIUM_RATE);
     
-    const isMid = Math.random() < 0.1; // 単独ボーナスの10%を中段チェリーに
-    
     let timing = 'after3';
     if (premium) {
       timing = pick(['lever', 'start', 'after3']);
     } else {
-      timing = Math.random() < 0.25 ? pick(['lever', 'start']) : 'after3'; // 約25%で先光り
+      timing = Math.random() < 0.25 ? pick(['lever', 'start']) : 'after3';
     }
-    
-    // 中段チェリー時は必ず後告知
-    if (isMid) timing = 'after3';
 
     return {
       bonus:true,
@@ -405,14 +418,14 @@ function chooseRound(){
       premiumType:premium?pick(PREMIUM_TYPES):null,
       lampTiming:timing,
       bonusPattern:bp,
-      isMidCherry:isMid,
+      isMidCherry:false,
       isConsecutiveCherry:false,
       grape:false,
       bell:false
     };
   }
 
-  if (Math.floor(Math.random() * 1000) === 0) {
+  if (Math.floor(Math.random() * 600) === 0) {
     return {
       bonus:false,
       premium:false,
@@ -528,7 +541,6 @@ function snapToIndex(i,idx){
   r.el.style.transform=`translateY(${r.offset}px)`;
 }
 
-// 仮想的にボーナスが揃う位置かチェックする関数（ペナルティ・生入り防止用）
 function checkBonusAligned(testIdxs) {
   const lines = [
     [REELS[0][(testIdxs[0]-1+REELS[0].length)%REELS[0].length], REELS[1][(testIdxs[1]-1+REELS[1].length)%REELS[1].length], REELS[2][(testIdxs[2]-1+REELS[2].length)%REELS[2].length]],
@@ -561,10 +573,10 @@ function stopReel(i){
   let idx = visibleCenterIndex(i);
 
   if(round.bonusReady){
-    // 告知済み：プレイヤーの目押しに従い、最大4コマまでボーナス図柄を引き込む（ワープ・ズレ落ち防止機能）
+    // 告知済み：リール1周分（最大21コマ分）全検索して自動で引き込んで揃える超アシスト仕様
     const targetSym = round.bonusPattern.line[i];
     let found = false;
-    for (let s = 0; s <= 4; s++) {
+    for (let s = 0; s <= REELS[i].length; s++) {
       if (REELS[i][(idx + s) % REELS[i].length] === targetSym) {
         idx = (idx + s) % REELS[i].length;
         found = true;
@@ -572,7 +584,6 @@ function stopReel(i){
       }
     }
     if (!found) {
-      // 目押し失敗時：ボーナス図柄を避けてハズレ目を形成
       let slide = 0;
       while ((REELS[i][idx] === 'seven' || REELS[i][idx] === 'bar') && slide < 4) {
         idx = (idx + 1) % REELS[i].length;
@@ -581,47 +592,49 @@ function stopReel(i){
     }
 
   } else if (round && round.bonus) {
-    if (round.isMidCherry) {
-      // 中段チェリー＋上段BAR揃いの強制停止位置
-      const candidates = MID_CHERRY_STOPS[i];
-      idx = candidates.reduce((prev, curr) =>
-        Math.abs(curr - idx) < Math.abs(prev - idx) ? curr : prev
-      );
-    } else {
-      // 未告知でのボーナス成立状態（リーチ目形成＆生入り回避）
-      let minSlide = 99;
-
-      ['seven', 'bar'].forEach(sym => {
-        for (let s = 0; s <= 4; s++) {
-          if (REELS[i][(idx + s) % REELS[i].length] === sym) {
-            if (s < minSlide) minSlide = s;
-          }
-        }
-      });
-
-      if (minSlide <= 4) {
-        idx = (idx + minSlide) % REELS[i].length;
+    if (i === 0) {
+      if (round.isMidCherry) {
+        idx = 7; // リール0の7番（中段チェリー）を強制ビタ停止！
+      } else if (round.isConsecutiveCherry) {
+        idx = Math.random() < 0.5 ? 6 : 15; // 角チェリー確定
       } else {
-        if(i===0 || i===1){
-          while(
-            REELS[i][idx]==='cherry' ||
-            REELS[i][(idx-1+REELS[i].length)%REELS[i].length]==='cherry' ||
-            REELS[i][(idx+1)%REELS[i].length]==='cherry'
-          ) {
-            idx = (idx + 1) % REELS[i].length;
-          }
-        }
-        while(REELS[i][idx]==='seven' || REELS[i][idx]==='bar'){
-          idx = (idx + 1) % REELS[i].length;
+        // 通常の単独ボーナス等の場合はチェリーを絶対に避ける
+        while(REELS[0][idx]==='cherry' || REELS[0][(idx-1+REELS[0].length)%REELS[0].length]==='cherry' || REELS[0][(idx+1)%REELS[0].length]==='cherry' || idx===7 || idx===16) {
+          idx = (idx + 1) % REELS[0].length;
         }
       }
+    } else if (i === 1) {
+      if (round.isMidCherry) {
+        const candidates = MID_CHERRY_STOPS[i]; // [10, 18]
+        idx = candidates.reduce((prev, curr) => Math.abs(curr - idx) < Math.abs(prev - idx) ? curr : prev);
+      } else {
+        let minSlide = 99;
+        ['seven', 'bar'].forEach(sym => {
+          for (let s = 0; s <= 4; s++) {
+            if (REELS[1][(idx + s) % REELS[1].length] === sym) { if (s < minSlide) minSlide = s; }
+          }
+        });
+        if (minSlide <= 4) idx = (idx + minSlide) % REELS[1].length;
+      }
+    } else if (i === 2) {
+      if (round.isMidCherry) {
+        idx = 3; // 中段チェリー用BAR引き込み
+      } else {
+        let minSlide = 99;
+        ['seven', 'bar'].forEach(sym => {
+          for (let s = 0; s <= 4; s++) {
+            if (REELS[2][(idx + s) % REELS[2].length] === sym) { if (s < minSlide) minSlide = s; }
+          }
+        });
+        if (minSlide <= 4) idx = (idx + minSlide) % REELS[2].length;
+      }
+    }
 
-      // 第3停止でボーナスが揃ってしまう場合は、強制的にズラしてハズレ目（リーチ目）にする
+    if (!round.isMidCherry) {
       const stoppedCount = reels.filter(x => x.stopped).length;
       if (stoppedCount === 2) {
         let testIdxs = [reels[0].centerIndex, reels[1].centerIndex, reels[2].centerIndex];
         testIdxs[i] = idx;
-        
         let slide = 0;
         while (checkBonusAligned(testIdxs) && slide < 4) {
           idx = (idx + 1) % REELS[i].length;
@@ -633,11 +646,11 @@ function stopReel(i){
           testIdxs[i] = idx;
         }
       }
+    }
 
-      if (stopOrder.length === 1 && stopOrder[0] === 2) {
-        reversePushFlags.active = true;
-        reversePushFlags.isBonus = true;
-      }
+    if (stopOrder.length === 1 && stopOrder[0] === 2) {
+      reversePushFlags.active = true;
+      reversePushFlags.isBonus = true;
     }
 
   } else if (round.bell) {
@@ -662,19 +675,13 @@ function stopReel(i){
     if (reversePushFlags.active) {
       if (i === 1) {
         let validIdxs = [];
-        if (reversePushFlags.grapeLine === 'top') {
-          validIdxs = [3, 7, 11, 15, 19];
-        } else {
-          validIdxs = [2, 6, 10, 14, 18];
-        }
+        if (reversePushFlags.grapeLine === 'top') validIdxs = [3, 7, 11, 15, 19];
+        else validIdxs = [2, 6, 10, 14, 18];
         idx = validIdxs.reduce((prev, curr) => Math.abs(curr - idx) < Math.abs(prev - idx) ? curr : prev);
       } else if (i === 0) {
         let validIdxs = [];
-        if (reversePushFlags.grapeLine === 'top') {
-          validIdxs = [4, 6, 9, 11, 14, 16, 19, 0];
-        } else {
-          validIdxs = [2, 4, 7, 9, 12, 14, 17, 19];
-        }
+        if (reversePushFlags.grapeLine === 'top') validIdxs = [4, 6, 9, 11, 14, 16, 19, 0];
+        else validIdxs = [2, 4, 7, 9, 12, 14, 17, 19];
         idx = validIdxs.reduce((prev, curr) => Math.abs(curr - idx) < Math.abs(prev - idx) ? curr : prev);
       }
     } else {
@@ -691,38 +698,17 @@ function stopReel(i){
     }
 
   } else {
-    if (stopOrder.length === 1 && stopOrder[0] === 2) {
-      if (idx === 1) idx = (idx + 1) % REELS[2].length;
-    }
-
-    if(i===0){
-      if (round.isConsecutiveCherry) {
-        idx = Math.random() < 0.5 ? 6 : 15;
-      } else {
-        while(
-          REELS[0][idx]==='cherry' ||
-          REELS[0][(idx-1+REELS[0].length)%REELS[0].length]==='cherry' ||
-          REELS[0][(idx+1)%REELS[0].length]==='cherry'
-        ) {
-          idx = (idx + 1) % REELS[0].length;
-        }
+    // 完全にハズレ・他小役の場合は絶対にリール0のセンターにチェリー(7,16)を止めない！
+    if (i === 0) {
+      while(REELS[0][idx]==='cherry' || REELS[0][(idx-1+REELS[0].length)%REELS[0].length]==='cherry' || REELS[0][(idx+1)%REELS[0].length]==='cherry' || idx===7 || idx===16) {
+        idx = (idx + 1) % REELS[0].length;
       }
     }
-
-    if(i===1){
-      if (round.isConsecutiveCherry) {
-        idx = pick([2, 6, 10, 14, 18]);
-      } else {
-        while(
-          REELS[1][idx]==='cherry' ||
-          REELS[1][(idx-1+REELS[1].length)%REELS[1].length]==='cherry' ||
-          REELS[1][(idx+1)%REELS[1].length]==='cherry'
-        ) {
-          idx = (idx + 1) % REELS[1].length;
-        }
+    if (i === 1) {
+      while(REELS[1][idx]==='cherry' || REELS[1][(idx-1+REELS[1].length)%REELS[1].length]==='cherry' || REELS[1][(idx+1)%REELS[1].length]==='cherry') {
+        idx = (idx + 1) % REELS[1].length;
       }
     }
-
     let basicShift = 0;
     while((REELS[i][idx]==='seven' || REELS[i][idx]==='bar') && basicShift < 4){
       idx = (idx + 1) % REELS[i].length;
@@ -741,11 +727,7 @@ function rowSymbols(i){
   const arr=REELS[i];
   const c=reels[i].centerIndex;
   const len=arr.length;
-  return [
-    arr[(c-1+len)%len],
-    arr[c],
-    arr[(c+1)%len]
-  ];
+  return [arr[(c-1+len)%len], arr[c], arr[(c+1)%len]];
 }
 
 function getPaylines(){
@@ -767,7 +749,7 @@ function evaluateCherry(){
   const result={payout:0,replay:0,cherryKind:null};
 
   if(left[1]==='cherry'){
-    result.payout+=0; // リーチ目扱いのため払い出しはなし
+    result.payout=2;
     result.cherryKind='中段チェリー';
     return result;
   }
@@ -777,12 +759,12 @@ function evaluateCherry(){
 
   const doubleCherryLines = paylines.filter(p => p.line[0]==='cherry' && p.line[1]==='cherry');
   if(doubleCherryLines.length>0){
-    result.payout+=2;
+    result.payout=2;
     result.cherryKind='連チェリー';
     return result;
   }
 
-  result.payout+=2;
+  result.payout=2;
   result.cherryKind='単チェリー';
   return result;
 }
@@ -796,11 +778,8 @@ function evalLines(){
 
   for(const p of paylines){
     const key=p.line.join(',');
-
     if(key==='bar,bar,bar') hasBarThree = true;
-    if(key==='bar,seven,bar' || key==='bar,bar,seven' || key==='seven,bar,bar'){
-      isFakeCombo = true;
-    }
+    if(key==='bar,seven,bar' || key==='bar,bar,seven' || key==='seven,bar,bar') isFakeCombo = true;
 
     for(const bp of BONUS_PATTERNS){
       if(key===bp.line.join(',')){
@@ -852,22 +831,59 @@ async function startSpin(){
   lit=false;
   state.lastPayout=0;
 
-  if (state.bonusActive) {
-    // 過去のセーブデータ破損等によるエラー防止処置
-    if (!state.bonusPattern) state.bonusPattern = pick(BONUS_PATTERNS);
-
+  // 【最優先】ボーナス1G連ストックがある場合の挙動
+  if (state.bonusStock > 0) {
+    state.bonusStock--;
+    state.bonusActive = true;
+    state.bonusPattern = BONUS_PATTERNS[0]; // 1G連は問答無用でBIG確定！
+    state.bonusPremium = true;
+    state.bonusPremiumType = 'colorShift';
+    
     round = {
       bonus:true,
-      bonusReady:true,
-      premium:state.bonusPremium,
-      premiumType:state.bonusPremiumType,
-      bonusPattern:state.bonusPattern,
+      bonusReady:true, // 超アシスト発動
+      premium:true,
+      premiumType:'colorShift',
+      bonusPattern:BONUS_PATTERNS[0],
       isMidCherry:false,
       isConsecutiveCherry:false,
-      grape:false,
-      bell:false
+      grape:false, bell:false
     };
+    lamp('color-shift');
+    setMsg('🎉1G連ストック継続発動！超プレミアム演出と共にBIGが始まります！🎉');
+
+  } else if (state.bonusActive) {
+    if (!state.bonusPattern) state.bonusPattern = pick(BONUS_PATTERNS);
+
+    // ボーナスを狙うゲーム中の1/15のサプライズ中段チェリー(1G連ストックフラグ)
+    const isMidCherrySurprise = Math.floor(Math.random() * 15) === 0;
+    if (isMidCherrySurprise) {
+      round = {
+        bonus:true,
+        bonusReady:false, // 揃わせずに中段チェリーを出す
+        premium:true,
+        premiumType:'blink',
+        lampTiming:'after3',
+        bonusPattern:state.bonusPattern,
+        isMidCherry:true,
+        isConsecutiveCherry:false,
+        grape:false, bell:false,
+        is1G連StockActive:true // 独自フラグ
+      };
+    } else {
+      round = {
+        bonus:true,
+        bonusReady:true,
+        premium:state.bonusPremium,
+        premiumType:state.bonusPremiumType,
+        bonusPattern:state.bonusPattern,
+        isMidCherry:false,
+        isConsecutiveCherry:false,
+        grape:false, bell:false
+      };
+    }
   } else {
+    // 通常・ジャグ連ゾーン中の通常抽選
     const rawRound = chooseRound();
     if (rawRound.bonus) {
       state.bonusPattern = rawRound.bonusPattern;
@@ -883,8 +899,7 @@ async function startSpin(){
         bonusPattern:rawRound.bonusPattern,
         isMidCherry:rawRound.isMidCherry,
         isConsecutiveCherry:rawRound.isConsecutiveCherry,
-        grape:false,
-        bell:false
+        grape:false, bell:false
       };
     } else {
       round = {
@@ -920,11 +935,8 @@ async function startSpin(){
   stopBtns.forEach(b=>b.disabled=false);
 
   if (round.bonusReady) {
-    if (round.premium) {
-      lamp(getPremiumLampMode(round.premiumType));
-    } else {
-      lamp('blue');
-    }
+    if (round.premium) lamp(getPremiumLampMode(round.premiumType));
+    else lamp('blue');
   } else {
     lamp('off');
   }
@@ -940,34 +952,51 @@ async function startSpin(){
 
   startAll();
 
-  if (!state.bonusActive && !round.bonusReady) {
+  if (round.is1G連StockActive) {
+    setMsg('リールに注目…！何かが引き込まれようとしています！');
+  } else if (!state.bonusActive && !round.bonusReady) {
     setMsg(state.zoneLeft>0 ? `ジャグ連中 1/${JUGUREN_DENOM}。STOPを押して止めてください。` : `通常時 1/${NORMAL_DENOM}。STOPを押して止めてください。`);
   } else if (!round.bonusReady) {
     setMsg('STOPを押して止めてください。');
   } else {
-    setMsg('GOGO!ランプ点灯中！ボーナス図柄（7やBAR）を狙ってください！');
+    setMsg('GOGO!ランプ点灯中！どこを押しても勝手に滑ってボーナスが揃います！');
   }
 }
 
 function finishRound(){
   const res=evalLines();
 
-  // 1. 内部ボーナス当選＆告知前（このゲームでボーナス成立）
+  // 【新規追加】図柄を狙うゲームで1G連ストック用の中段チェリーが止まった場合の処理
+  if (round && round.is1G連StockActive) {
+    state.bonusStock = (state.bonusStock || 0) + 1; // 1G連BIGのストック加算！
+    state.credits += res.payout;
+    state.coinDiff += res.payout;
+    state.lastPayout = res.payout;
+
+    setMsg('🍒降臨！ボーナス狙い中に激レア【中段チェリー】成立！【1G連BIG確定】の極上の恩恵を獲得しました！次ゲームも即ボーナスです！');
+    inSpin = false;
+    saveState();
+    updateUI();
+    return;
+  }
+
   if (round && round.bonus && !round.bonusReady) {
-    state.bonusActive = true; // 次のゲームからボーナス揃え可能状態に移行
+    state.bonusActive = true;
+    if (round.premium) lamp(getPremiumLampMode(round.premiumType));
+    else lamp('blue');
 
-    // ランプ点灯処理
-    if (round.premium) {
-      lamp(getPremiumLampMode(round.premiumType));
-    } else {
-      lamp('blue');
-    }
-
-    const isMidCherryReach = round.isMidCherry && res.cherryKind === '中段チェリー' && res.hasBarThree;
     let msg = '★ GOGO!ランプ点灯！次ゲームでボーナスを狙ってください！';
 
-    if (isMidCherryReach) {
-      msg = '🍒 中段チェリー + 上段BAR！内部当選時専用演出です。ランプ点灯、次ゲームで狙ってください！';
+    if (round.isMidCherry) {
+      // ジャグ連（10Gのチャンス）内の中段チェリーならストックを大盤振る舞い！
+      if (state.zoneLeft > 0) {
+        state.bonusStock = (state.bonusStock || 0) + 1;
+        msg = '🍒プレミアム中段チェリー降臨！ジャグ連ゾーン中につき【BIG確定＋1G連ストック継続】の最強上乗せコンボです！ランプ点灯！';
+      } else {
+        msg = '🍒プレミアム中段チェリー降臨！【BIG確定】の最強出目です！GOGO!ランプ点灯、次ゲームで7を狙ってください！';
+      }
+    } else if (round.isMidCherry || res.cherryKind === '中段チェリー') {
+      msg = '🍒究極の中段チェリー降臨！【BIG確定】の歓喜の瞬間！GOGO!ランプ点灯、次ゲームで7を狙ってください！';
     } else if (res.hasBarThree || res.isFakeCombo) {
       msg = '★ リーチ目降臨！GOGO!ランプ点灯！次ゲームでボーナスを狙ってください！';
     }
@@ -986,10 +1015,8 @@ function finishRound(){
     return;
   }
 
-  // 2. ボーナス告知済みで揃えにいったゲーム（目押しの成否）
   if (state.bonusActive && round.bonusReady) {
     if (res.bonusHit) {
-      // 目押し成功でボーナス入賞
       const premium = round.premium && res.bonusHit.type === 'BIG';
       recordBonus(res.bonusHit, premium);
 
@@ -1005,9 +1032,12 @@ function finishRound(){
       state.bonusPremiumType = null;
       lamp('off');
 
-      setMsg(`${res.bonusHit.type==='BIG'?'🎉 BIG':'✨ REG'}確定！ ${res.bonusHit.payout}枚獲得。10Gのジャグ連チャンスへ！`);
+      if ((state.bonusStock || 0) > 0) {
+        setMsg(`🎉 ${res.bonusHit.type==='BIG'?'BIG':'REG'}獲得！さらに【1G連ストック】が残っています！次ゲーム、レバーONで即BIG継続確定！`);
+      } else {
+        setMsg(`🎉 ${res.bonusHit.type==='BIG'?'BIG':'REG'}確定！ ${res.bonusHit.payout}枚獲得。10Gのジャグ連チャンスへ！`);
+      }
     } else {
-      // 目押し失敗（小役フォロー）
       if(res.replay>0) state.replayStock+=res.replay;
       if(res.payout>0){
         state.credits+=res.payout;
@@ -1025,7 +1055,6 @@ function finishRound(){
     return;
   }
 
-  // 3. 通常ゲーム（ハズレ、小役）
   if(res.replay>0) state.replayStock+=res.replay;
   if(res.payout>0){
     state.credits+=res.payout;
@@ -1040,7 +1069,7 @@ function finishRound(){
   } else if(res.cherryKind==='連チェリー'){
     setMsg('連チェリー成立！ 2枚獲得。(チェリー重複なら次ゲームで光るかも…！？)');
   } else if(res.cherryKind==='中段チェリー'){
-    setMsg('中段チェリー成立！');
+    setMsg('🍒中段チェリー成立！ 100%ボーナス確定！');
   } else if(res.replay>0&&res.payout>0){
     setMsg(`${res.cherryKind?res.cherryKind+' / ':''}ブドウとリプレイが揃いました。`);
   } else if(res.replay>0){
