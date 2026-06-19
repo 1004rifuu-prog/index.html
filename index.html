@@ -118,7 +118,7 @@ button{touch-action:manipulation}
 
 <script>
 // ==========================================
-// Web Audio API サウンド処理 (脳汁音・回転音)
+// Web Audio API サウンド処理 (回転音・各種効果音)
 // ==========================================
 let audioCtx = null;
 let spinOsc = null;
@@ -184,12 +184,11 @@ function playStopSound() {
   osc.stop(audioCtx.currentTime + 0.1);
 }
 
-// 脳汁全開！ガコッ＋キュイン音
+// 本家のガコッ！音のみを再現
 function playPekaSound() {
   if (!audioCtx) return;
   const now = audioCtx.currentTime;
 
-  // 1. Gaco! (ガコッ！という衝撃音)
   const gacoOsc = audioCtx.createOscillator();
   const gacoGain = audioCtx.createGain();
   gacoOsc.type = 'square';
@@ -201,36 +200,26 @@ function playPekaSound() {
   gacoGain.connect(audioCtx.destination);
   gacoOsc.start(now);
   gacoOsc.stop(now + 0.1);
+}
 
-  // 2. Kyu-i-n! (キュインキュイーン♪という確定音)
-  const osc = audioCtx.createOscillator();
-  const osc2 = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-
-  osc.type = 'sine';
-  osc2.type = 'sine';
-
-  osc.frequency.setValueAtTime(1000, now + 0.05);
-  osc.frequency.exponentialRampToValueAtTime(2500, now + 0.3);
-  osc.frequency.linearRampToValueAtTime(2600, now + 1.2);
-
-  osc2.frequency.setValueAtTime(1020, now + 0.05);
-  osc2.frequency.exponentialRampToValueAtTime(2530, now + 0.3);
-  osc2.frequency.linearRampToValueAtTime(2630, now + 1.2);
-
-  gain.gain.setValueAtTime(0, now + 0.05);
-  gain.gain.linearRampToValueAtTime(0.3, now + 0.1);
-  gain.gain.linearRampToValueAtTime(0.3, now + 1.0);
-  gain.gain.linearRampToValueAtTime(0, now + 1.5);
-
-  osc.connect(gain);
-  osc2.connect(gain);
-  gain.connect(audioCtx.destination);
-
-  osc.start(now + 0.05);
-  osc2.start(now + 0.05);
-  osc.stop(now + 1.5);
-  osc2.stop(now + 1.5);
+// ブドウ揃い（払い出し）音の追加
+function playGrapeSound() {
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  const count = 7; // 7枚払い出しに合わせて7回パルスを刻む
+  for (let i = 0; i < count; i++) {
+    const time = now + i * 0.1;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'square'; // レトロなピコピコ感のある矩形波
+    osc.frequency.setValueAtTime(550, time);
+    gain.gain.setValueAtTime(0.15, time);
+    gain.gain.exponentialRampToValueAtTime(0.01, time + 0.07);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(time);
+    osc.stop(time + 0.07);
+  }
 }
 // ==========================================
 
@@ -346,7 +335,7 @@ function lamp(mode='off'){
 
   lit = mode !== 'off';
 
-  // 消灯状態から点灯状態へ変わった時のみ脳汁音を鳴らす
+  // 消灯状態から点灯状態へ変わった時のみ音を鳴らす
   if (!wasLit && lit) {
     playPekaSound();
   }
@@ -698,6 +687,11 @@ async function startSpin(){
 function finishRound(){
   stopSpinSound(); // 安全のため確実に停止
   const res=evalLines();
+
+  // ブドウが成立している場合はサウンドを再生
+  if (res.hitLines.some(l => l.includes('grape'))) {
+    playGrapeSound();
+  }
 
   if (round && round.is1G連StockActive) {
     state.bonusStock = (state.bonusStock || 0) + 1; state.credits += res.payout; state.coinDiff += res.payout; state.lastPayout = res.payout;
