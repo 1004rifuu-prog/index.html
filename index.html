@@ -118,7 +118,7 @@ button{touch-action:manipulation}
 
 <script>
 // ==========================================
-// Web Audio API サウンド処理
+// Web Audio API & サウンド処理
 // ==========================================
 let audioCtx = null;
 let spinOsc = null;
@@ -184,50 +184,34 @@ function playStopSound() {
   osc.stop(audioCtx.currentTime + 0.1);
 }
 
-function playPekaSound() {
+// 追加: ブドウ揃い時のサウンド
+function playGrapeSound() {
   if (!audioCtx) return;
   const now = audioCtx.currentTime;
+  const freqs = [659.25, 880.00, 1046.50]; // ブドウ揃い風の軽快な和音（タロロン♪）
+  freqs.forEach((freq, i) => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, now + i * 0.08);
+    gain.gain.setValueAtTime(0, now + i * 0.08);
+    gain.gain.linearRampToValueAtTime(0.2, now + i * 0.08 + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.08 + 0.4);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now + i * 0.08);
+    osc.stop(now + i * 0.08 + 0.4);
+  });
+}
 
-  const gacoOsc = audioCtx.createOscillator();
-  const gacoGain = audioCtx.createGain();
-  gacoOsc.type = 'square';
-  gacoOsc.frequency.setValueAtTime(400, now);
-  gacoOsc.frequency.exponentialRampToValueAtTime(50, now + 0.1);
-  gacoGain.gain.setValueAtTime(0.5, now);
-  gacoGain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-  gacoOsc.connect(gacoGain);
-  gacoGain.connect(audioCtx.destination);
-  gacoOsc.start(now);
-  gacoOsc.stop(now + 0.1);
-
-  const osc = audioCtx.createOscillator();
-  const osc2 = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-
-  osc.type = 'sine';
-  osc2.type = 'sine';
-
-  osc.frequency.setValueAtTime(1000, now + 0.05);
-  osc.frequency.exponentialRampToValueAtTime(2500, now + 0.3);
-  osc.frequency.linearRampToValueAtTime(2600, now + 1.2);
-
-  osc2.frequency.setValueAtTime(1020, now + 0.05);
-  osc2.frequency.exponentialRampToValueAtTime(2530, now + 0.3);
-  osc2.frequency.linearRampToValueAtTime(2630, now + 1.2);
-
-  gain.gain.setValueAtTime(0, now + 0.05);
-  gain.gain.linearRampToValueAtTime(0.3, now + 0.1);
-  gain.gain.linearRampToValueAtTime(0.3, now + 1.0);
-  gain.gain.linearRampToValueAtTime(0, now + 1.5);
-
-  osc.connect(gain);
-  osc2.connect(gain);
-  gain.connect(audioCtx.destination);
-
-  osc.start(now + 0.05);
-  osc2.start(now + 0.05);
-  osc.stop(now + 1.5);
-  osc2.stop(now + 1.5);
+// 変更: 光ったときのサウンド（送っていただいたファイル用）
+function playPekaSound() {
+  // ※AIというシステム上、音声ファイルを直接受け取ることができないため、
+  // 仮のファイル名「peka.mp3」を読み込んでいます。
+  // ご用意いただいた実際の音声ファイルのファイル名（またはパス）に書き換えてください！
+  const pekaAudio = new Audio('jjj.mp3'); 
+  pekaAudio.volume = 0.6; // 音量は60%に設定しています
+  pekaAudio.play().catch(e => console.log('Audio play failed:', e));
 }
 // ==========================================
 
@@ -411,14 +395,12 @@ function pick(arr){return arr[Math.floor(Math.random()*arr.length)]}
 function denomNow(){return state.zoneLeft>0?JUGUREN_DENOM:NORMAL_DENOM}
 
 function chooseRound(){
-  // 1. 中段チェリー確率を厳密に1/16384にする
   const isMidCherry = Math.floor(Math.random() * 16384) === 0;
   if (isMidCherry) {
-    const bp = BONUS_PATTERNS[0]; // BIG
+    const bp = BONUS_PATTERNS[0];
     return { bonus:true, premium:true, premiumType:pick(PREMIUM_TYPES), lampTiming:'after3', bonusPattern:bp, isMidCherry:true, isConsecutiveCherry:false, grape:false, bell:false };
   }
 
-  // 2. 通常のチェリー抽選 (1/18)
   const isCherry = Math.floor(Math.random() * 18) === 0;
   if (isCherry) {
     const isHit = Math.random() < 0.12;
@@ -429,7 +411,6 @@ function chooseRound(){
     }
   }
 
-  // 3. 単独ボーナスおよびその他の小役抽選
   const hit=Math.floor(Math.random()*denomNow())===0;
   if(hit){
     const bp=pick(BONUS_PATTERNS); const premium=(bp.type==='BIG' && Math.random()<PREMIUM_RATE);
@@ -570,7 +551,6 @@ function stopReel(i){
     let basicShift = 0; while((REELS[i][idx]==='seven' || REELS[i][idx]==='bar') && basicShift < 4){ idx = (idx + 1) % REELS[i].length; basicShift++; }
   }
 
-  // --- 生入り完全防止処理 (第3停止時のみ) ---
   const currentStoppedCount = reels.filter(x => x.stopped).length;
   if (!round.bonusReady && currentStoppedCount === 2) {
     let testIdxs = [reels[0].centerIndex, reels[1].centerIndex, reels[2].centerIndex];
@@ -581,7 +561,6 @@ function stopReel(i){
       testIdxs[i] = idx;
       slide++;
     }
-    // それでも揃ってしまう万が一の事態を防ぐための強制回避ループ
     while (checkBonusAligned(testIdxs)) {
       idx = (idx + 1) % REELS[i].length;
       testIdxs[i] = idx;
@@ -661,7 +640,6 @@ async function startSpin(){
     round = { bonus:true, bonusReady:true, premium:true, premiumType:'colorShift', bonusPattern:BONUS_PATTERNS[0], isMidCherry:false, isConsecutiveCherry:false, grape:false, bell:false };
     lamp('color-shift'); setMsg('🎉1G連ストック継続発動！超プレミアム演出と共にBIGが始まります！🎉');
   } else if (state.bonusActive) {
-    // ボーナス中（ランプ点灯中・図柄狙いゲーム）は、重複や中段チェリーなどの追加抽選を一切排除
     if (!state.bonusPattern) state.bonusPattern = pick(BONUS_PATTERNS);
     round = { bonus:true, bonusReady:true, premium:state.bonusPremium, premiumType:state.bonusPremiumType, bonusPattern:state.bonusPattern, isMidCherry:false, isConsecutiveCherry:false, grape:false, bell:false };
   } else {
@@ -699,6 +677,11 @@ async function startSpin(){
 function finishRound(){
   stopSpinSound(); 
   const res=evalLines();
+
+  // ★ブドウ揃い時のサウンドを追加
+  if (res.hitLines.some(l => l.includes('grape'))) {
+    playGrapeSound();
+  }
 
   if (round && round.bonus && !round.bonusReady) {
     state.bonusActive = true;
