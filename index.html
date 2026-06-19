@@ -21,12 +21,37 @@ button{touch-action:manipulation}
 .reel-view{position:relative;background:linear-gradient(180deg,#f2f2f2,#d8d8d8 12%,#101010 12%,#020202 88%,#dddddd 88%,#fafafa);border:4px solid #eaeaea;border-radius:20px;padding:14px 12px;box-shadow:inset 0 0 20px rgba(0,0,0,.48)}.payline{position:absolute;left:14px;right:14px;top:50%;transform:translateY(-50%);height:5px;border-radius:999px;background:linear-gradient(90deg,transparent,#ff5555,#ffe76f,#ff5555,transparent);box-shadow:0 0 12px rgba(255,112,112,.9);z-index:5;pointer-events:none}
 .reels{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.reel-window{height:240px;position:relative;overflow:hidden;border-radius:14px;border:3px solid #8c8c8c;background:linear-gradient(180deg,#202020,#000);box-shadow:inset 0 0 14px rgba(0,0,0,.82)}.reel-window:before,.reel-window:after{content:"";position:absolute;left:0;width:100%;height:32px;z-index:3;pointer-events:none}.reel-window:before{top:0;background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(0,0,0,0))}.reel-window:after{bottom:0;background:linear-gradient(0deg,rgba(255,255,255,.14),rgba(0,0,0,0))}.reel-strip{position:absolute;left:0;top:0;width:100%;will-change:transform}.symbol{height:80px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:36px;color:#fff;text-shadow:0 2px 2px rgba(0,0,0,.72);border-bottom:1px solid rgba(255,255,255,.05);user-select:none}.symbol.seven{color:#ff5555;font-style:italic}.symbol.bar{color:#ffccdf;font-size:26px;letter-spacing:.08em}.symbol.grape{color:#be93ff}.symbol.cherry{color:#ff88a8}.symbol.bell{color:#ffe8a5}.symbol.pig{color:#ffb07e}.symbol.clown{color:#fff3b6}
 .gogo-zone{display:flex;align-items:end;gap:10px;margin-top:10px;justify-content:space-between;flex-wrap:wrap}.gogo-lamp-wrap{display:flex;align-items:center;gap:10px}.gogo-lamp{width:94px;height:94px;border-radius:18px 18px 24px 24px;position:relative;background:linear-gradient(180deg,#1a2030,#07090d);border:3px solid rgba(113,170,255,.18);box-shadow:inset 0 0 18px rgba(0,0,0,.98);overflow:hidden}.gogo-lamp:before{content:"";position:absolute;inset:8px;clip-path:polygon(50% 0%,58% 12%,72% 4%,74% 19%,90% 11%,84% 28%,100% 31%,88% 43%,100% 50%,88% 57%,100% 69%,84% 72%,90% 89%,74% 81%,72% 96%,58% 88%,50% 100%,42% 88%,28% 96%,26% 81%,10% 89%,16% 72%,0% 69%,12% 57%,0% 50%,12% 43%,0% 31%,16% 28%,10% 11%,26% 19%,28% 4%,42% 12%);background:radial-gradient(circle at 40% 35%,rgba(255,255,255,.02),rgba(120,180,255,.04) 30%,rgba(10,20,30,.96) 85%);transition:all .35s ease}.gogo-lamp:after{content:"GOGO!\A CHANCE";white-space:pre;position:absolute;inset:0;display:grid;place-items:center;text-align:center;line-height:1.05;font-weight:900;font-size:18px;color:rgba(255,255,255,.03);text-shadow:none;z-index:2}
-.gogo-lamp.on:before{background:radial-gradient(circle at 40% 35%,#efffff 0%,#8ce8ff 18%,#22c8ff 44%,#004ef6 75%,#00103e 100%);filter:drop-shadow(0 0 10px #66dcff) drop-shadow(0 0 18px rgba(33,199,255,.7))}.gogo-lamp.on:after{color:#fff;text-shadow:0 0 8px #fff,0 0 16px #9ceeff}.gogo-lamp.premium:before{background:radial-gradient(circle at 40% 35%,#fff7ff 0%,#ffc8ff 18%,#ff6cf1 42%,#7c28ff 72%,#18003d 100%)!important;filter:drop-shadow(0 0 12px #ff87f5) drop-shadow(0 0 24px rgba(208,83,255,.9))}.gogo-lamp.premium:after{color:#fff!important;text-shadow:0 0 8px #fff,0 0 16px #ffbcff!important}.gogo-lamp.blink{animation:blinkLamp .18s linear infinite}.gogo-lamp.mellow{animation:mellowLamp 1.9s ease-in-out infinite}@keyframes blinkLamp{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.97)}}@keyframes mellowLamp{0%{opacity:.25;transform:scale(.96)}50%{opacity:1;transform:scale(1)}100%{opacity:.3;transform:scale(.97)}}
+.gogo-lamp.on:before{background:radial-gradient(circle at 40% 35%,#efffff 0%,#8ce8ff 18%,#22c8ff 44%,#004ef6 75%,#00103e 100%);filter:drop-shadow(0 0 10px #66dcff) drop-shadow(0 0 18px rgba(33,199,255,.7))}.gogo-lamp.on:after{color:#fff;text-shadow:0 0 8px #fff,0 0 16px #9ceeff}
+.gogo-lamp.premium:before{background:radial-gradient(circle at 40% 35%,#fff7ff 0%,#ffc8ff 18%,#ff6cf1 42%,#7c28ff 72%,#18003d 100%)!important;filter:drop-shadow(0 0 12px #ff87f5) drop-shadow(0 0 24px rgba(208,83,255,.9))}.gogo-lamp.premium:after{color:#fff!important;text-shadow:0 0 8px #fff,0 0 16px #ffbcff!important}
+.gogo-lamp.blink{animation:blinkLamp .18s linear infinite}
+.gogo-lamp.mellow{animation:mellowLamp 1.9s ease-in-out infinite}
+.gogo-lamp.color-shift:before{
+  background:radial-gradient(circle at 40% 35%,#efffff 0%,#8ce8ff 18%,#22c8ff 44%,#004ef6 75%,#00103e 100%);
+  animation:premiumColorShift 1.3s linear infinite;
+}
+.gogo-lamp.color-shift:after{
+  color:#fff!important;
+  text-shadow:0 0 8px #fff,0 0 16px #9ceeff!important;
+}
+@keyframes blinkLamp{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.97)}}
+@keyframes mellowLamp{0%{opacity:.25;transform:scale(.96)}50%{opacity:1;transform:scale(1)}100%{opacity:.3;transform:scale(.97)}}
+@keyframes premiumColorShift{
+  0%{
+    filter:hue-rotate(0deg) drop-shadow(0 0 10px #66dcff) drop-shadow(0 0 18px rgba(33,199,255,.7));
+  }
+  50%{
+    filter:hue-rotate(120deg) drop-shadow(0 0 10px #ff77f3) drop-shadow(0 0 18px rgba(255,100,230,.8));
+  }
+  100%{
+    filter:hue-rotate(240deg) drop-shadow(0 0 10px #ffe066) drop-shadow(0 0 18px rgba(255,220,80,.8));
+  }
+}
 .seven-seg-row{display:grid;grid-template-columns:repeat(3,92px);gap:8px;justify-content:center;align-items:center}.seg{height:46px;border-radius:8px;background:linear-gradient(180deg,#1d0000,#3d0505 55%,#120000);border:2px solid #6e2727;display:grid;place-items:center;font-family:monospace;font-size:28px;font-weight:900;color:#ff4242;text-shadow:0 0 8px rgba(255,68,68,.65);box-shadow:inset 0 0 12px rgba(0,0,0,.55)}
 .control-panel{margin-top:14px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08);display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center}.lever{width:62px;height:62px;border-radius:18px;background:linear-gradient(180deg,#444,#111);border:3px solid rgba(255,255,255,.18);display:grid;place-items:center;box-shadow:inset 0 0 8px rgba(255,255,255,.08),0 8px 16px rgba(0,0,0,.35)}.lever button{width:100%;height:100%;border:none;border-radius:14px;background:linear-gradient(180deg,#ffd24e,#ff8b14 55%,#a84a00);color:#4a2100;font-weight:900;cursor:pointer;box-shadow:inset 0 4px 8px rgba(255,255,255,.42),0 8px 16px rgba(0,0,0,.25)}
 .center-buttons{display:flex;justify-content:center;align-items:center;gap:16px;flex-wrap:wrap}.stop-btn{width:88px;height:88px;border-radius:50%;border:4px solid rgba(255,255,255,.38);background:radial-gradient(circle at 35% 30%,#ffffff 0%,#d9d9d9 45%,#8f8f8f 78%,#5e5e5e 100%);color:#343434;font-weight:900;cursor:pointer;box-shadow:inset 0 4px 8px rgba(255,255,255,.55),0 10px 18px rgba(0,0,0,.3);transition:transform .1s ease,filter .1s ease,opacity .12s ease}.stop-btn:hover{transform:translateY(-1px);filter:brightness(1.04)}.stop-btn:active{transform:translateY(1px)}.stop-btn:disabled{opacity:.45;filter:grayscale(.35);cursor:not-allowed;transform:none}
 .bet-button{width:72px;height:72px;border-radius:50%;border:4px solid rgba(255,255,255,.35);background:radial-gradient(circle at 35% 30%,#ffaaaa 0%,#ff4646 45%,#b10000 85%,#5f0000 100%);color:#fff;font-weight:900;box-shadow:inset 0 4px 8px rgba(255,255,255,.3),0 10px 18px rgba(0,0,0,.3)}.message{margin-top:14px;border-radius:12px;padding:12px 14px;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.12);color:#fff0b6;min-height:52px;line-height:1.6;font-weight:700}.footer-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:10px;flex-wrap:wrap}.mini-action{border:none;border-radius:10px;padding:9px 12px;font-weight:900;cursor:pointer;color:#fff;background:linear-gradient(180deg,#555,#262626)}.mini-action.orange{background:linear-gradient(180deg,#ffb31f,#ff7f00)}.mini-action.pink{background:linear-gradient(180deg,#e45f7e,#b71c4f)}
-@media (max-width:920px){.dashboard{grid-template-columns:1fr}.machine-core{grid-template-columns:1fr}.side-lamps,.side-art{flex-direction:row;justify-content:center}.control-panel{grid-template-columns:1fr;justify-items:center}.gogo-zone{justify-content:center}}@media (max-width:640px){.recent-hits{grid-template-columns:repeat(5,1fr)}.stats-panel{grid-template-columns:1fr 1fr}.game-circle{grid-column:span 2}.banner-seven{min-width:86px;height:48px;font-size:40px}.reel-window{height:198px}.symbol{height:66px;font-size:30px}.symbol.bar{font-size:22px}.seven-seg-row{grid-template-columns:repeat(3,74px)}.seg{height:40px;font-size:24px}.stop-btn{width:74px;height:74px}}
+@media (max-width:920px){.dashboard{grid-template-columns:1fr}.machine-core{grid-template-columns:1fr}.side-lamps,.side-art{flex-direction:row;justify-content:center}.control-panel{grid-template-columns:1fr;justify-items:center}.gogo-zone{justify-content:center}}
+@media (max-width:640px){.recent-hits{grid-template-columns:repeat(5,1fr)}.stats-panel{grid-template-columns:1fr 1fr}.game-circle{grid-column:span 2}.banner-seven{min-width:86px;height:48px;font-size:40px}.reel-window{height:198px}.symbol{height:66px;font-size:30px}.symbol.bar{font-size:22px}.seven-seg-row{grid-template-columns:repeat(3,74px)}.seg{height:40px;font-size:24px}.stop-btn{width:74px;height:74px}}
 </style>
 </head>
 <body>
@@ -46,6 +71,7 @@ button{touch-action:manipulation}
     <div class="stat-card wide game-circle"><div><div class="label">ゲーム</div><div id="totalGameText" class="sub">累計 0G</div></div><div class="big-round"><span>今回</span><strong id="currentGames">0</strong></div></div>
   </div>
 </section>
+
 <section class="cabinet">
   <div class="jackpot-banner"><div class="banner-seven">7</div><div class="banner-seven">7</div><div class="banner-seven">7</div></div>
   <div class="juggler-title">JUGGLER</div>
@@ -53,6 +79,7 @@ button{touch-action:manipulation}
     <div class="side-lamps"><div class="count-lamp">3</div><div class="count-lamp">2</div><div class="count-lamp">1</div></div>
     <div class="reel-box">
       <div class="reel-info-row"><div>3BET固定</div><div id="modeText">通常抽選 1/99</div><div id="premiumText">プレミア 0回</div></div>
+
       <div class="reel-view">
         <div class="payline"></div>
         <div class="reels">
@@ -61,32 +88,57 @@ button{touch-action:manipulation}
           <div class="reel-window"><div id="reel2" class="reel-strip"></div></div>
         </div>
       </div>
+
       <div class="gogo-zone">
         <div class="gogo-lamp-wrap">
           <div id="gogoLamp" class="gogo-lamp"></div>
-          <div class="seven-seg-row"><div id="segCredit" class="seg">000</div><div id="segPay" class="seg">000</div><div id="segZone" class="seg">000</div></div>
+          <div class="seven-seg-row">
+            <div id="segCredit" class="seg">000</div>
+            <div id="segPay" class="seg">000</div>
+            <div id="segZone" class="seg">000</div>
+          </div>
         </div>
       </div>
+
       <div class="control-panel">
         <div class="lever"><button id="spinBtn">START</button></div>
-        <div class="center-buttons"><button id="stop0" class="stop-btn" disabled>STOP</button><button id="stop1" class="stop-btn" disabled>STOP</button><button id="stop2" class="stop-btn" disabled>STOP</button></div>
+        <div class="center-buttons">
+          <button id="stop0" class="stop-btn" disabled>STOP</button>
+          <button id="stop1" class="stop-btn" disabled>STOP</button>
+          <button id="stop2" class="stop-btn" disabled>STOP</button>
+        </div>
         <button class="bet-button" disabled>BET</button>
       </div>
-      <div id="message" class="message">スマホ対応の最適化と、回転速度・中段チェリーの修正を行いました。</div>
-      <div class="footer-actions"><button id="addCreditBtn" class="mini-action orange">クレジット+100</button><button id="resetBtn" class="mini-action pink">リセット</button></div>
+
+      <div id="message" class="message">中段チェリー内部当選演出・リール配列・プレミア演出分離を反映しました。</div>
+
+      <div class="footer-actions">
+        <button id="addCreditBtn" class="mini-action orange">クレジット+100</button>
+        <button id="resetBtn" class="mini-action pink">リセット</button>
+      </div>
     </div>
     <div class="side-art"><div>BONUS</div><div>CHANCE</div><div>PREMIUM</div></div>
   </div>
 </section>
 </div>
+
 <script>
-const STORAGE_KEY='juggler_complete_v4';
+const STORAGE_KEY='juggler_complete_v5';
 const BET=3,NORMAL_DENOM=99,JUGUREN_DENOM=8,JUGUREN_GAMES=10,PREMIUM_RATE=0.20;
 
 const REELS=[
-['bell','seven','pig','grape','pig','grape','bar','cherry','grape','pig','grape','seven','clown','grape','pig','grape','cherry','bar','grape','pig','grape'],
-['pig','seven','grape','cherry','cherry','bell','grape','cherry','pig','bar','grape','cherry','pig','bell','grape','cherry','pig','bar','grape','cherry','clown'],
-['grape','seven','bar','bell','pig','grape','clown','bell','pig','grape','clown','bell','pig','grape','clown','bell','pig','grape','clown','bell','pig']
+[
+  'bell','seven','pig','grape','pig','grape','bar','cherry','grape','pig',
+  'grape','seven','clown','grape','pig','grape','cherry','grape','grape','pig','grape'
+],
+[
+  'pig','seven','grape','cherry','cherry','bell','grape','cherry','pig','bar',
+  'grape','cherry','pig','bell','grape','cherry','pig','bar','grape','cherry','clown'
+],
+[
+  'grape','seven','bar','bell','pig','grape','clown','bell','pig','grape',
+  'clown','bell','pig','grape','clown','bell','pig','grape','clown','bell','pig'
+]
 ];
 
 const S={
@@ -104,8 +156,16 @@ const BONUS_PATTERNS=[
   {name:'77BAR',type:'REG',line:['seven','seven','bar'],payout:60}
 ];
 
-const PREMIUM_TYPES=['blackout','blink','delay','mellow'];
+const PREMIUM_TYPES=['blackout','blink','delay','mellow','colorShift'];
 const LAMP_TIMINGS=['lever','start','after1','after2','after3'];
+
+// 中段チェリー内部当選演出専用停止位置
+// 左: 中段チェリー / 中右: 上段BARが揃う形
+const MID_CHERRY_STOPS = {
+  0: [7],
+  1: [10,18],
+  2: [3]
+};
 
 const app=document.getElementById('app');
 const canvas=document.getElementById('graphCanvas');
@@ -142,7 +202,6 @@ const reelEls=[
 
 let state=loadState();
 let reels=reelEls.map((el,i)=>({
-  // 回転スピードをアップ（11.4 → 22 ベースに変更）
   el,i,offset:0,raf:null,spinning:false,stopped:false,speed:22+i*1.5,centerIndex:0,targetIndex:0
 }));
 let round=null,inSpin=false,lit=false;
@@ -166,12 +225,16 @@ function loadState(){
     replayStock:0,
     history:[],
     graph:[0],
-    bonusActive: false,
-    bonusPattern: null,
-    bonusPremium: false,
-    bonusPremiumType: null
+    bonusActive:false,
+    bonusPattern:null,
+    bonusPremium:false,
+    bonusPremiumType:null
   };
-  try{return {...d,...(JSON.parse(localStorage.getItem(STORAGE_KEY))||{})}}catch{return d}
+  try{
+    return {...d,...(JSON.parse(localStorage.getItem(STORAGE_KEY))||{})};
+  }catch{
+    return d;
+  }
 }
 function saveState(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state))}
 function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
@@ -182,13 +245,22 @@ function rate(cnt){return cnt>0?`1/${Math.max(1,Math.floor(state.totalGames/cnt)
 function setMsg(t){messageEl.innerHTML=t}
 
 function lamp(mode='off'){
-  gogoLamp.classList.remove('on','premium','blink','mellow');
-  if(mode==='blue')gogoLamp.classList.add('on');
-  if(mode==='premium')gogoLamp.classList.add('on','premium');
-  if(mode==='blue-blink')gogoLamp.classList.add('on','blink');
-  if(mode==='premium-blink')gogoLamp.classList.add('on','premium','blink');
-  if(mode==='premium-mellow')gogoLamp.classList.add('on','premium','mellow');
+  gogoLamp.classList.remove('on','premium','blink','mellow','color-shift');
+
+  if(mode==='blue') gogoLamp.classList.add('on');
+  if(mode==='premium') gogoLamp.classList.add('on','premium');
+  if(mode==='blue-blink') gogoLamp.classList.add('on','blink');
+  if(mode==='premium-mellow') gogoLamp.classList.add('on','premium','mellow');
+  if(mode==='color-shift') gogoLamp.classList.add('on','color-shift');
+
   lit=mode!=='off';
+}
+
+function getPremiumLampMode(type){
+  if(type==='blink') return 'blue-blink';
+  if(type==='mellow') return 'premium-mellow';
+  if(type==='colorShift') return 'color-shift';
+  return 'premium';
 }
 
 function buildStrip(arr,repeat=4){
@@ -293,11 +365,27 @@ function chooseRound(){
       const bp = pick(BONUS_PATTERNS);
       const premium = (bp.type==='BIG' && Math.random()<PREMIUM_RATE);
       return {
-        bonus: true, premium, premiumType: premium?pick(PREMIUM_TYPES):null, lampTiming: 'after3', bonusPattern: bp, isMidCherry: false, isConsecutiveCherry: true, grape: false, bell: false
+        bonus:true,
+        premium,
+        premiumType:premium?pick(PREMIUM_TYPES):null,
+        lampTiming:'after3',
+        bonusPattern:bp,
+        isMidCherry:false,
+        isConsecutiveCherry:true,
+        grape:false,
+        bell:false
       };
     } else {
       return {
-        bonus: false, premium: false, premiumType: null, lampTiming: null, bonusPattern: null, isMidCherry: false, isConsecutiveCherry: true, grape: false, bell: false
+        bonus:false,
+        premium:false,
+        premiumType:null,
+        lampTiming:null,
+        bonusPattern:null,
+        isMidCherry:false,
+        isConsecutiveCherry:true,
+        grape:false,
+        bell:false
       };
     }
   }
@@ -307,32 +395,64 @@ function chooseRound(){
     const bp=pick(BONUS_PATTERNS);
     const premium=(bp.type==='BIG' && Math.random()<PREMIUM_RATE);
     return {
-      bonus:true, premium, premiumType:premium?pick(PREMIUM_TYPES):null, lampTiming:premium?'lever':pick(LAMP_TIMINGS), bonusPattern:bp, isMidCherry: Math.random() < 0.25, isConsecutiveCherry: false, grape: false, bell: false
+      bonus:true,
+      premium,
+      premiumType:premium?pick(PREMIUM_TYPES):null,
+      lampTiming:premium?'lever':pick(LAMP_TIMINGS),
+      bonusPattern:bp,
+      isMidCherry:Math.random()<0.25, // 中段チェリーは内部当選時の演出の一つ
+      isConsecutiveCherry:false,
+      grape:false,
+      bell:false
     };
   }
 
   if (Math.floor(Math.random() * 1000) === 0) {
     return {
-      bonus: false, premium: false, premiumType: null, lampTiming: null, bonusPattern: null, isMidCherry: false, isConsecutiveCherry: false, grape: false, bell: true
+      bonus:false,
+      premium:false,
+      premiumType:null,
+      lampTiming:null,
+      bonusPattern:null,
+      isMidCherry:false,
+      isConsecutiveCherry:false,
+      grape:false,
+      bell:true
     };
   }
 
   if (Math.random() < (1 / 6.3)) {
     return {
-      bonus: false, premium: false, premiumType: null, lampTiming: null, bonusPattern: null, isMidCherry: false, isConsecutiveCherry: false, grape: true, bell: false
+      bonus:false,
+      premium:false,
+      premiumType:null,
+      lampTiming:null,
+      bonusPattern:null,
+      isMidCherry:false,
+      isConsecutiveCherry:false,
+      grape:true,
+      bell:false
     };
   }
 
   return {
-    bonus:false, premium:false, premiumType:null, lampTiming:null, bonusPattern:null, isMidCherry: false, isConsecutiveCherry: false, grape: false, bell: false
+    bonus:false,
+    premium:false,
+    premiumType:null,
+    lampTiming:null,
+    bonusPattern:null,
+    isMidCherry:false,
+    isConsecutiveCherry:false,
+    grape:false,
+    bell:false
   };
 }
 
 async function premiumPrelude(){
   if(!round.premium)return;
+
   if(round.premiumType==='blackout'){
     app.classList.add('blackout');
-    lamp('premium-blink');
     setMsg('★ プレミア：パネル全消灯 ★');
     await sleep(360);
     app.classList.remove('blackout');
@@ -340,18 +460,25 @@ async function premiumPrelude(){
     app.classList.add('blackout');
     await sleep(240);
     app.classList.remove('blackout');
+
   }else if(round.premiumType==='blink'){
-    lamp('premium-blink');
-    setMsg('★ プレミア：激しく点滅 ★');
+    lamp('blue-blink');
+    setMsg('★ プレミア：青点滅 ★');
     await sleep(760);
+
   }else if(round.premiumType==='delay'){
-    lamp('premium');
     setMsg('★ プレミア：遅れ始動 ★');
     await sleep(520);
+
   }else if(round.premiumType==='mellow'){
     lamp('premium-mellow');
     setMsg('★ 新プレミア：じんわり点灯 ★');
     await sleep(1100);
+
+  }else if(round.premiumType==='colorShift'){
+    lamp('color-shift');
+    setMsg('★ プレミア：色変化 ★');
+    await sleep(900);
   }
 }
 
@@ -374,7 +501,7 @@ function startReel(i,delay=0){
 function startAll(){
   const d=round&&round.premium&&round.premiumType==='delay'?520:0;
   reels.forEach((r,i)=>startReel(i,d+i*120));
-  
+
   if(round && round.bonus && !round.bonusReady && !round.premium && round.lampTiming==='start') {
     setTimeout(()=>{
       lamp('blue');
@@ -421,26 +548,20 @@ function stopReel(i){
 
   if(round.bonusReady){
     idx=nextIndexForSymbol(i,round.bonusPattern.line[i]);
+
   } else if ((round && round.bonus) || state.bonusActive) {
     if (round && round.bonus && round.isMidCherry) {
-      if (i === 0) {
-        idx = 7; 
-      } else if (i === 1) {
-        idx = [10, 18].reduce((prev, curr) => Math.abs(curr - idx) < Math.abs(prev - idx) ? curr : prev); 
-      } else if (i === 2) {
-        idx = 3; 
-      }
+      const candidates = MID_CHERRY_STOPS[i];
+      idx = candidates.reduce((prev, curr) =>
+        Math.abs(curr - idx) < Math.abs(prev - idx) ? curr : prev
+      );
     } else {
       let minSlide = 99;
-      let chooseSym = 'seven';
-      
+
       ['seven', 'bar'].forEach(sym => {
         for (let s = 0; s <= 4; s++) {
           if (REELS[i][(idx + s) % REELS[i].length] === sym) {
-            if (s < minSlide) {
-              minSlide = s;
-              chooseSym = sym;
-            }
+            if (s < minSlide) minSlide = s;
           }
         }
       });
@@ -449,7 +570,11 @@ function stopReel(i){
         idx = (idx + minSlide) % REELS[i].length;
       } else {
         if(i===0 || i===1){
-          while(REELS[i][idx]==='cherry' || REELS[i][(idx-1+REELS[i].length)%REELS[i].length]==='cherry' || REELS[i][(idx+1)%REELS[i].length]==='cherry') {
+          while(
+            REELS[i][idx]==='cherry' ||
+            REELS[i][(idx-1+REELS[i].length)%REELS[i].length]==='cherry' ||
+            REELS[i][(idx+1)%REELS[i].length]==='cherry'
+          ) {
             idx = (idx + 1) % REELS[i].length;
           }
         }
@@ -463,6 +588,7 @@ function stopReel(i){
         reversePushFlags.isBonus = true;
       }
     }
+
   } else if (round.bell) {
     if (i === 0) idx = 0;
     if (i === 1) {
@@ -473,9 +599,10 @@ function stopReel(i){
       const valid = [3, 7, 11, 15, 19];
       idx = valid.reduce((prev, curr) => Math.abs(curr - idx) < Math.abs(prev - idx) ? curr : prev);
     }
+
   } else if (round.grape) {
     if (stopOrder.length === 1 && stopOrder[0] === 2) {
-      idx = 1; 
+      idx = 1;
       reversePushFlags.active = true;
       reversePushFlags.isBonus = false;
       reversePushFlags.grapeLine = Math.random() < 0.5 ? 'top' : 'diag';
@@ -485,17 +612,17 @@ function stopReel(i){
       if (i === 1) {
         let validIdxs = [];
         if (reversePushFlags.grapeLine === 'top') {
-          validIdxs = [3, 7, 11, 15, 19]; 
+          validIdxs = [3, 7, 11, 15, 19];
         } else {
-          validIdxs = [2, 6, 10, 14, 18]; 
+          validIdxs = [2, 6, 10, 14, 18];
         }
         idx = validIdxs.reduce((prev, curr) => Math.abs(curr - idx) < Math.abs(prev - idx) ? curr : prev);
       } else if (i === 0) {
         let validIdxs = [];
         if (reversePushFlags.grapeLine === 'top') {
-          validIdxs = [4, 6, 9, 11, 14, 16, 19, 0]; 
+          validIdxs = [4, 6, 9, 11, 14, 16, 19, 0];
         } else {
-          validIdxs = [2, 4, 7, 9, 12, 14, 17, 19]; 
+          validIdxs = [2, 4, 7, 9, 12, 14, 17, 19];
         }
         idx = validIdxs.reduce((prev, curr) => Math.abs(curr - idx) < Math.abs(prev - idx) ? curr : prev);
       }
@@ -511,16 +638,21 @@ function stopReel(i){
         idx = validIdxs.reduce((prev, curr) => Math.abs(curr - idx) < Math.abs(prev - idx) ? curr : prev);
       }
     }
+
   } else {
     if (stopOrder.length === 1 && stopOrder[0] === 2) {
-      if (idx === 1) idx = (idx + 1) % REELS[2].length; 
+      if (idx === 1) idx = (idx + 1) % REELS[2].length;
     }
 
     if(i===0){
       if (round.isConsecutiveCherry) {
         idx = Math.random() < 0.5 ? 6 : 15;
       } else {
-        while(REELS[0][idx]==='cherry' || REELS[0][(idx-1+REELS[0].length)%REELS[0].length]==='cherry' || REELS[0][(idx+1)%REELS[0].length]==='cherry') {
+        while(
+          REELS[0][idx]==='cherry' ||
+          REELS[0][(idx-1+REELS[0].length)%REELS[0].length]==='cherry' ||
+          REELS[0][(idx+1)%REELS[0].length]==='cherry'
+        ) {
           idx = (idx + 1) % REELS[0].length;
         }
       }
@@ -530,12 +662,16 @@ function stopReel(i){
       if (round.isConsecutiveCherry) {
         idx = pick([2, 6, 10, 14, 18]);
       } else {
-        while(REELS[1][idx]==='cherry' || REELS[1][(idx-1+REELS[1].length)%REELS[1].length]==='cherry' || REELS[1][(idx+1)%REELS[1].length]==='cherry') {
+        while(
+          REELS[1][idx]==='cherry' ||
+          REELS[1][(idx-1+REELS[1].length)%REELS[1].length]==='cherry' ||
+          REELS[1][(idx+1)%REELS[1].length]==='cherry'
+        ) {
           idx = (idx + 1) % REELS[1].length;
         }
       }
     }
-    
+
     let basicShift = 0;
     while((REELS[i][idx]==='seven' || REELS[i][idx]==='bar') && basicShift < 4){
       idx = (idx + 1) % REELS[i].length;
@@ -548,20 +684,22 @@ function stopReel(i){
   stopBtns[i].disabled=true;
 
   const stoppedCount = reels.filter(x=>x.stopped).length;
-  
+
   if (stoppedCount === 3 && !state.bonusActive && !round.bonusReady && !(round && round.bonus)) {
     let res = evalLines();
     let checkAttempts = 0;
-    while ((res.hitLines.some(l => l.includes('grape')) && !round.grape) || 
-           (res.hitLines.some(l => l.includes('bell')) && !round.bell) ||
-           res.bonusHit || 
-           res.isFakeCombo || 
-           res.hasBarThree) {
+    while (
+      (res.hitLines.some(l => l.includes('grape')) && !round.grape) ||
+      (res.hitLines.some(l => l.includes('bell')) && !round.bell) ||
+      res.bonusHit ||
+      res.isFakeCombo ||
+      res.hasBarThree
+    ) {
       idx = (idx + 1) % REELS[i].length;
       snapToIndex(i, idx);
       res = evalLines();
       checkAttempts++;
-      if (checkAttempts > 25) break; 
+      if (checkAttempts > 25) break;
     }
   }
 
@@ -576,7 +714,7 @@ function stopReel(i){
     const need={start:-1,after1:1,after2:2,after3:3}[round.lampTiming];
     if(stoppedCount===need){
       lamp('blue');
-      setMsg(`GOGO!点灯。ボーナス成立状態になりました！次ゲームで揃います。`);
+      setMsg('GOGO!点灯。ボーナス成立状態になりました！次ゲームで揃います。');
     }
   }
 
@@ -588,9 +726,9 @@ function rowSymbols(i){
   const c=reels[i].centerIndex;
   const len=arr.length;
   return [
-    arr[(c-1+len)%len], 
-    arr[c],             
-    arr[(c+1)%len]      
+    arr[(c-1+len)%len],
+    arr[c],
+    arr[(c+1)%len]
   ];
 }
 
@@ -613,7 +751,6 @@ function evaluateCherry(){
   const result={payout:0,replay:0,cherryKind:null};
 
   if(left[1]==='cherry'){
-    // 中段チェリーの払い出しを0枚に変更（上段BAR揃い等のリーチ目として扱うため）
     result.payout+=0;
     result.cherryKind='中段チェリー';
     return result;
@@ -639,11 +776,11 @@ function evalLines(){
   let payout=0, replay=0, bonusHit=null;
   const hitLines=[];
   let isFakeCombo = false;
-  let hasBarThree = false; 
+  let hasBarThree = false;
 
   for(const p of paylines){
     const key=p.line.join(',');
-    
+
     if(key==='bar,bar,bar') hasBarThree = true;
     if(key==='bar,seven,bar' || key==='bar,bar,seven' || key==='seven,bar,bar'){
       isFakeCombo = true;
@@ -681,7 +818,7 @@ function recordBonus(bp,premium){
     time:new Date().toLocaleString('ja-JP')
   });
   state.history=state.history.slice(0,20);
-  state.zoneLeft=JUGUREN_GAMES; 
+  state.zoneLeft=JUGUREN_GAMES;
   if(premium) state.premiumCount++;
 }
 
@@ -701,15 +838,15 @@ async function startSpin(){
 
   if (state.bonusActive) {
     round = {
-      bonus: false,
-      bonusReady: true,
-      premium: state.bonusPremium,
-      premiumType: state.bonusPremiumType,
-      bonusPattern: state.bonusPattern,
-      isMidCherry: false,
-      isConsecutiveCherry: false,
-      grape: false,
-      bell: false
+      bonus:false,
+      bonusReady:true,
+      premium:state.bonusPremium,
+      premiumType:state.bonusPremiumType,
+      bonusPattern:state.bonusPattern,
+      isMidCherry:false,
+      isConsecutiveCherry:false,
+      grape:false,
+      bell:false
     };
   } else {
     const rawRound = chooseRound();
@@ -720,24 +857,29 @@ async function startSpin(){
       state.bonusPremiumType = rawRound.premiumType;
 
       round = {
-        bonus: true,
-        bonusReady: false,
-        premium: rawRound.premium,
-        premiumType: rawRound.premiumType,
-        lampTiming: rawRound.lampTiming,
-        bonusPattern: rawRound.bonusPattern,
-        isMidCherry: rawRound.isMidCherry,
-        isConsecutiveCherry: rawRound.isConsecutiveCherry,
-        grape: false,
-        bell: false
+        bonus:true,
+        bonusReady:false,
+        premium:rawRound.premium,
+        premiumType:rawRound.premiumType,
+        lampTiming:rawRound.lampTiming,
+        bonusPattern:rawRound.bonusPattern,
+        isMidCherry:rawRound.isMidCherry,
+        isConsecutiveCherry:rawRound.isConsecutiveCherry,
+        grape:false,
+        bell:false
       };
     } else {
       round = {
-        bonus: false, bonusReady: false, premium: false, premiumType: null, lampTiming: null, bonusPattern: null,
-        isMidCherry: false,
-        isConsecutiveCherry: rawRound.isConsecutiveCherry,
-        grape: rawRound.grape,
-        bell: rawRound.bell
+        bonus:false,
+        bonusReady:false,
+        premium:false,
+        premiumType:null,
+        lampTiming:null,
+        bonusPattern:null,
+        isMidCherry:false,
+        isConsecutiveCherry:rawRound.isConsecutiveCherry,
+        grape:rawRound.grape,
+        bell:rawRound.bell
       };
     }
   }
@@ -761,8 +903,7 @@ async function startSpin(){
 
   if (round.bonusReady) {
     if (round.premium) {
-      if (round.premiumType === 'mellow') lamp('premium-mellow');
-      else lamp('premium');
+      lamp(getPremiumLampMode(round.premiumType));
     } else {
       lamp('blue');
     }
@@ -775,7 +916,7 @@ async function startSpin(){
       await premiumPrelude();
     } else {
       lamp('blue');
-      setMsg("GOGO!点灯！レバーONでランプが光りました！次ゲームでボーナスが揃います。");
+      setMsg('GOGO!点灯！レバーONでランプが光りました！次ゲームでボーナスが揃います。');
     }
   }
 
@@ -784,9 +925,9 @@ async function startSpin(){
   if (!state.bonusActive) {
     setMsg(state.zoneLeft>0 ? `ジャグ連中 1/${JUGUREN_DENOM}。STOPを押して止めてください。` : `通常時 1/${NORMAL_DENOM}。STOPを押して止めてください。`);
   } else if (!round.bonusReady) {
-    setMsg("STOPを押して止めてください。");
+    setMsg('STOPを押して止めてください。');
   } else {
-    setMsg("GOGO!ランプ点灯中！ボーナス図柄（7やBAR）を狙ってください！");
+    setMsg('GOGO!ランプ点灯中！ボーナス図柄（7やBAR）を狙ってください！');
   }
 }
 
@@ -797,33 +938,41 @@ function finishRound(){
     lamp('blue');
   }
 
-  if ((res.hasBarThree || res.isFakeCombo) && (state.bonusActive || (round && round.bonus))) {
+  const isMidCherryReach =
+    round &&
+    round.isMidCherry &&
+    res.cherryKind === '中段チェリー' &&
+    res.hasBarThree;
+
+  if ((res.hasBarThree || res.isFakeCombo || isMidCherryReach) && (state.bonusActive || (round && round.bonus))) {
     if (round && round.premium) {
-      if (round.premiumType === 'mellow') lamp('premium-mellow');
-      else lamp('premium');
+      lamp(getPremiumLampMode(round.premiumType));
     } else {
       lamp('blue');
     }
-    state.bonusActive = true; 
-    
+
+    state.bonusActive = true;
+
     let msg = '★ リーチ目降臨！GOGO!ランプ点灯！次ゲームで777か77BARを狙ってください！';
-    if (res.cherryKind === '中段チェリー') {
-      msg = '🍒中段チェリー降臨！GOGO!ランプ点灯！次ゲームで777か77BARを狙ってください！';
+
+    if (isMidCherryReach) {
+      msg = '🍒 中段チェリー + 上段BAR揃い！内部当選時専用演出です。GOGO!ランプ点灯、次ゲームでボーナスを狙ってください！';
     } else if (res.isFakeCombo) {
       msg = '★ リーチ目（ズレ目）降臨！ランプ点灯！次ゲームでボーナスを狙ってください！';
     }
+
     setMsg(msg);
-    
+
     if (res.payout > 0) {
       state.credits += res.payout;
       state.coinDiff += res.payout;
       state.lastPayout = res.payout;
     }
-    
+
     inSpin = false;
     saveState();
     updateUI();
-    return; 
+    return;
   }
 
   if(res.bonusHit && (round.bonusReady || state.bonusActive)){
@@ -847,6 +996,7 @@ function finishRound(){
       bonusMsg = `✨告知前に自力で揃えた！生当たり！ ${bonusMsg}`;
     }
     setMsg(bonusMsg);
+
   }else{
     if(res.replay>0) state.replayStock+=res.replay;
 
@@ -872,7 +1022,6 @@ function finishRound(){
       } else if(res.cherryKind==='連チェリー'){
         setMsg('連チェリー成立！ 2枚獲得。(2%のランプ点灯抽選は漏れました)');
       }else if(res.cherryKind==='中段チェリー'){
-        // テキストを修正
         setMsg('中段チェリー成立！');
       }else if(res.replay>0&&res.payout>0){
         setMsg(`${res.cherryKind?res.cherryKind+' / ':''}ブドウとリプレイが揃いました。`);
@@ -887,13 +1036,13 @@ function finishRound(){
       }
     }
   }
-  
+
   inSpin=false;
   saveState();
   updateUI();
 }
 
-/* --- イベントリスナーの登録 --- */
+/* --- イベントリスナー --- */
 spinBtn.addEventListener('click', startSpin);
 stopBtns.forEach((b, i) => b.addEventListener('click', () => stopReel(i)));
 
@@ -910,7 +1059,7 @@ document.getElementById('resetBtn').addEventListener('click', () => {
   }
 });
 
-/* --- 初期化処理 --- */
+/* --- 初期化 --- */
 initReels();
 updateUI();
 lamp('off');
