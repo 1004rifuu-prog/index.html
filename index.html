@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-<title>JUGGLER風オリジナル完成版 (中段チェリー完全救済＆1G連特化版)</title>
+<title>JUGGLER風オリジナル完成版 (サウンド＆脳汁特化版)</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:"Hiragino Sans","Yu Gothic",sans-serif;background:radial-gradient(circle at top,#3a0d62 0%,#19061f 48%,#050108 100%);color:#fff;min-height:100vh;padding:14px;overscroll-behavior-y:none}
@@ -104,7 +104,7 @@ button{touch-action:manipulation}
         <button class="bet-button" disabled>BET</button>
       </div>
 
-      <div id="message" class="message">中段チェリーバグを完全修正！1G連ストック機能を搭載しました！</div>
+      <div id="message" class="message">サウンド＆脳汁特化版！ペカると確定音が鳴り響きます！</div>
 
       <div class="footer-actions">
         <button id="addCreditBtn" class="mini-action orange">クレジット+100</button>
@@ -117,7 +117,125 @@ button{touch-action:manipulation}
 </div>
 
 <script>
-const STORAGE_KEY='juggler_complete_v8';
+// ==========================================
+// Web Audio API サウンド処理 (脳汁音・回転音)
+// ==========================================
+let audioCtx = null;
+let spinOsc = null;
+let spinGain = null;
+
+function initAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}
+
+function playLeverSound() {
+  if (!audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'square';
+  osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.1);
+  gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.1);
+}
+
+function playSpinSound() {
+  if (!audioCtx) return;
+  stopSpinSound();
+  spinOsc = audioCtx.createOscillator();
+  spinGain = audioCtx.createGain();
+  spinOsc.type = 'triangle';
+  spinOsc.frequency.setValueAtTime(80, audioCtx.currentTime); // 低い回転待機音
+  spinGain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+  spinOsc.connect(spinGain);
+  spinGain.connect(audioCtx.destination);
+  spinOsc.start();
+}
+
+function stopSpinSound() {
+  if (spinGain && spinOsc) {
+    spinGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.1);
+    spinOsc.stop(audioCtx.currentTime + 0.1);
+    spinOsc = null;
+  }
+}
+
+function playStopSound() {
+  if (!audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'square';
+  osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.1);
+  gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.1);
+}
+
+// 脳汁全開！ガコッ＋キュイン音
+function playPekaSound() {
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+
+  // 1. Gaco! (ガコッ！という衝撃音)
+  const gacoOsc = audioCtx.createOscillator();
+  const gacoGain = audioCtx.createGain();
+  gacoOsc.type = 'square';
+  gacoOsc.frequency.setValueAtTime(400, now);
+  gacoOsc.frequency.exponentialRampToValueAtTime(50, now + 0.1);
+  gacoGain.gain.setValueAtTime(0.5, now);
+  gacoGain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+  gacoOsc.connect(gacoGain);
+  gacoGain.connect(audioCtx.destination);
+  gacoOsc.start(now);
+  gacoOsc.stop(now + 0.1);
+
+  // 2. Kyu-i-n! (キュインキュイーン♪という確定音)
+  const osc = audioCtx.createOscillator();
+  const osc2 = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+
+  osc.type = 'sine';
+  osc2.type = 'sine';
+
+  osc.frequency.setValueAtTime(1000, now + 0.05);
+  osc.frequency.exponentialRampToValueAtTime(2500, now + 0.3);
+  osc.frequency.linearRampToValueAtTime(2600, now + 1.2);
+
+  osc2.frequency.setValueAtTime(1020, now + 0.05);
+  osc2.frequency.exponentialRampToValueAtTime(2530, now + 0.3);
+  osc2.frequency.linearRampToValueAtTime(2630, now + 1.2);
+
+  gain.gain.setValueAtTime(0, now + 0.05);
+  gain.gain.linearRampToValueAtTime(0.3, now + 0.1);
+  gain.gain.linearRampToValueAtTime(0.3, now + 1.0);
+  gain.gain.linearRampToValueAtTime(0, now + 1.5);
+
+  osc.connect(gain);
+  osc2.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  osc.start(now + 0.05);
+  osc2.start(now + 0.05);
+  osc.stop(now + 1.5);
+  osc2.stop(now + 1.5);
+}
+// ==========================================
+
+
+const STORAGE_KEY='juggler_complete_v9';
 const BET=3,NORMAL_DENOM=99,JUGUREN_DENOM=8,JUGUREN_GAMES=10,PREMIUM_RATE=0.20;
 
 const REELS=[
@@ -203,31 +321,10 @@ let reversePushFlags = { active: false, isBonus: false, grapeLine: 'diag' };
 
 function loadState(){
   const d={
-    credits:300,
-    currentGames:0,
-    totalGames:0,
-    totalHits:0,
-    bb:0,
-    rb:0,
-    streak:0,
-    zoneLeft:0,
-    premiumCount:0,
-    lastPayout:0,
-    coinDiff:0,
-    replayStock:0,
-    history:[],
-    graph:[0],
-    bonusActive:false,
-    bonusPattern:null,
-    bonusPremium:false,
-    bonusPremiumType:null,
-    bonusStock:0
+    credits:300, currentGames:0, totalGames:0, totalHits:0, bb:0, rb:0, streak:0, zoneLeft:0, premiumCount:0,
+    lastPayout:0, coinDiff:0, replayStock:0, history:[], graph:[0], bonusActive:false, bonusPattern:null, bonusPremium:false, bonusPremiumType:null, bonusStock:0
   };
-  try{
-    return {...d,...(JSON.parse(localStorage.getItem(STORAGE_KEY))||{})};
-  }catch{
-    return d;
-  }
+  try{ return {...d,...(JSON.parse(localStorage.getItem(STORAGE_KEY))||{})}; }catch{ return d; }
 }
 function saveState(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state))}
 function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
@@ -238,6 +335,7 @@ function rate(cnt){return cnt>0?`1/${Math.max(1,Math.floor(state.totalGames/cnt)
 function setMsg(t){messageEl.innerHTML=t}
 
 function lamp(mode='off'){
+  const wasLit = lit;
   gogoLamp.classList.remove('on','premium','blink','mellow','color-shift');
 
   if(mode==='blue') gogoLamp.classList.add('on');
@@ -246,7 +344,12 @@ function lamp(mode='off'){
   if(mode==='premium-mellow') gogoLamp.classList.add('on','premium','mellow');
   if(mode==='color-shift') gogoLamp.classList.add('on','color-shift');
 
-  lit=mode!=='off';
+  lit = mode !== 'off';
+
+  // 消灯状態から点灯状態へ変わった時のみ脳汁音を鳴らす
+  if (!wasLit && lit) {
+    playPekaSound();
+  }
 }
 
 function getPremiumLampMode(type){
@@ -271,38 +374,26 @@ function initReels(){
     r.el.innerHTML=buildStrip(REELS[i]);
     r.offset=-(REELS[i].length*h()+i*h()*1.7);
     r.el.style.transform=`translateY(${r.offset}px)`;
-    r.spinning=false;
-    r.stopped=false;
-    r.centerIndex=0;
+    r.spinning=false; r.stopped=false; r.centerIndex=0;
   });
 }
 
 function updateUI(){
-  bbCountEl.textContent=state.bb;
-  rbCountEl.textContent=state.rb;
-  streakTextEl.textContent=`${state.streak}連`;
+  bbCountEl.textContent=state.bb; rbCountEl.textContent=state.rb; streakTextEl.textContent=`${state.streak}連`;
   zoneTextEl.textContent=state.zoneLeft>0?`残り ${state.zoneLeft}G / 1-${JUGUREN_DENOM}`:(state.streak>0?`${state.streak}連終了後待機`:'待機なし');
-  bbRateEl.textContent=rate(state.bb);
-  rbRateEl.textContent=rate(state.rb);
-  currentGamesEl.textContent=state.currentGames;
-  totalGameTextEl.textContent=`累計 ${state.totalGames}G`;
+  bbRateEl.textContent=rate(state.bb); rbRateEl.textContent=rate(state.rb);
+  currentGamesEl.textContent=state.currentGames; totalGameTextEl.textContent=`累計 ${state.totalGames}G`;
   graphMetaEl.textContent=state.zoneLeft>0?`ジャグ連 / 1-${JUGUREN_DENOM}`:`通常時 / 1-${NORMAL_DENOM}`;
   modeTextEl.textContent=state.zoneLeft>0?`ジャグ連抽選 1/${JUGUREN_DENOM}`:`通常抽選 1/${NORMAL_DENOM}`;
   premiumTextEl.textContent=`プレミア ${state.premiumCount}回`;
-  segCreditEl.textContent=fmt3(state.credits);
-  segPayEl.textContent=fmt3(state.lastPayout);
-  segZoneEl.textContent=fmt3(state.zoneLeft||state.bonusStock);
-  renderRecent();
-  drawGraph();
-  saveState();
+  segCreditEl.textContent=fmt3(state.credits); segPayEl.textContent=fmt3(state.lastPayout); segZoneEl.textContent=fmt3(state.zoneLeft||state.bonusStock);
+  renderRecent(); drawGraph(); saveState();
 }
 
 function renderRecent(){
-  recentHitsEl.innerHTML='';
-  const arr=state.history.slice(0,10);
+  recentHitsEl.innerHTML=''; const arr=state.history.slice(0,10);
   for(let i=0;i<10;i++){
-    const d=document.createElement('div');
-    d.className='recent-hit';
+    const d=document.createElement('div'); d.className='recent-hit';
     if(arr[i]) d.innerHTML=`${arr[i].type}${arr[i].premium?'★':''}<small>${arr[i].game}G</small>`;
     else d.innerHTML=`--<small>${i+1}回前</small>`;
     recentHitsEl.appendChild(d);
@@ -310,41 +401,14 @@ function renderRecent(){
 }
 
 function drawGraph(){
-  const w=canvas.width,H=canvas.height;
-  ctx.clearRect(0,0,w,H);
-  const data=state.graph.slice(-36);
-  if(data.length<2){
-    ctx.fillStyle='rgba(255,255,255,.32)';
-    ctx.font='bold 18px sans-serif';
-    ctx.fillText('回転を始めるとここにグラフを表示します',36,98);
-    return;
-  }
+  const w=canvas.width,H=canvas.height; ctx.clearRect(0,0,w,H); const data=state.graph.slice(-36);
+  if(data.length<2){ ctx.fillStyle='rgba(255,255,255,.32)'; ctx.font='bold 18px sans-serif'; ctx.fillText('回転を始めるとここにグラフを表示します',36,98); return; }
   const max=Math.max(...data,20),min=Math.min(...data,-20),range=Math.max(1,max-min),step=w/(data.length-1);
   const zero=H-((0-min)/range)*(H-20)-10;
-  ctx.beginPath();
-  ctx.moveTo(0,zero); ctx.lineTo(w,zero);
-  ctx.strokeStyle='rgba(255,230,130,.35)';
-  ctx.lineWidth=1;
-  ctx.stroke();
-
-  ctx.beginPath();
-  data.forEach((v,i)=>{
-    const x=i*step;
-    const y=H-((v-min)/range)*(H-20)-10;
-    i?ctx.lineTo(x,y):ctx.moveTo(x,y);
-  });
-  ctx.lineWidth=3;
-  ctx.strokeStyle='#ff6b6b';
-  ctx.stroke();
-
-  data.forEach((v,i)=>{
-    const x=i*step;
-    const y=H-((v-min)/range)*(H-20)-10;
-    ctx.beginPath();
-    ctx.arc(x,y,2.8,0,Math.PI*2);
-    ctx.fillStyle='#ffe37d';
-    ctx.fill();
-  });
+  ctx.beginPath(); ctx.moveTo(0,zero); ctx.lineTo(w,zero); ctx.strokeStyle='rgba(255,230,130,.35)'; ctx.lineWidth=1; ctx.stroke();
+  ctx.beginPath(); data.forEach((v,i)=>{ const x=i*step; const y=H-((v-min)/range)*(H-20)-10; i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
+  ctx.lineWidth=3; ctx.strokeStyle='#ff6b6b'; ctx.stroke();
+  data.forEach((v,i)=>{ const x=i*step; const y=H-((v-min)/range)*(H-20)-10; ctx.beginPath(); ctx.arc(x,y,2.8,0,Math.PI*2); ctx.fillStyle='#ffe37d'; ctx.fill(); });
 }
 
 function pick(arr){return arr[Math.floor(Math.random()*arr.length)]}
@@ -356,186 +420,66 @@ function chooseRound(){
     const isMid = Math.floor(Math.random() * 7) === 0;
     if (isMid) {
       const bp = BONUS_PATTERNS[0];
-      return {
-        bonus:true,
-        premium:true,
-        premiumType:pick(PREMIUM_TYPES),
-        lampTiming:'after3',
-        bonusPattern:bp,
-        isMidCherry:true,
-        isConsecutiveCherry:false,
-        grape:false,
-        bell:false
-      };
+      return { bonus:true, premium:true, premiumType:pick(PREMIUM_TYPES), lampTiming:'after3', bonusPattern:bp, isMidCherry:true, isConsecutiveCherry:false, grape:false, bell:false };
     } else {
       const isHit = Math.random() < 0.12;
       if (isHit) {
-        return {
-          bonus:true,
-          premium:false,
-          premiumType:null,
-          lampTiming:'after3',
-          bonusPattern:pick(BONUS_PATTERNS),
-          isMidCherry:false,
-          isConsecutiveCherry:true,
-          grape:false,
-          bell:false
-        };
+        return { bonus:true, premium:false, premiumType:null, lampTiming:'after3', bonusPattern:pick(BONUS_PATTERNS), isMidCherry:false, isConsecutiveCherry:true, grape:false, bell:false };
       } else {
-        return {
-          bonus:false,
-          premium:false,
-          premiumType:null,
-          lampTiming:null,
-          bonusPattern:null,
-          isMidCherry:false,
-          isConsecutiveCherry:true,
-          grape:false,
-          bell:false
-        };
+        return { bonus:false, premium:false, premiumType:null, lampTiming:null, bonusPattern:null, isMidCherry:false, isConsecutiveCherry:true, grape:false, bell:false };
       }
     }
   }
 
   const hit=Math.floor(Math.random()*denomNow())===0;
   if(hit){
-    const bp=pick(BONUS_PATTERNS);
-    const premium=(bp.type==='BIG' && Math.random()<PREMIUM_RATE);
-    
+    const bp=pick(BONUS_PATTERNS); const premium=(bp.type==='BIG' && Math.random()<PREMIUM_RATE);
     let timing = 'after3';
-    if (premium) {
-      timing = pick(['lever', 'start', 'after3']);
-    } else {
-      timing = Math.random() < 0.25 ? pick(['lever', 'start']) : 'after3';
-    }
-
-    return {
-      bonus:true,
-      premium,
-      premiumType:premium?pick(PREMIUM_TYPES):null,
-      lampTiming:timing,
-      bonusPattern:bp,
-      isMidCherry:false,
-      isConsecutiveCherry:false,
-      grape:false,
-      bell:false
-    };
+    if (premium) timing = pick(['lever', 'start', 'after3']);
+    else timing = Math.random() < 0.25 ? pick(['lever', 'start']) : 'after3';
+    return { bonus:true, premium, premiumType:premium?pick(PREMIUM_TYPES):null, lampTiming:timing, bonusPattern:bp, isMidCherry:false, isConsecutiveCherry:false, grape:false, bell:false };
   }
 
-  if (Math.floor(Math.random() * 600) === 0) {
-    return {
-      bonus:false,
-      premium:false,
-      premiumType:null,
-      lampTiming:null,
-      bonusPattern:null,
-      isMidCherry:false,
-      isConsecutiveCherry:false,
-      grape:false,
-      bell:true
-    };
-  }
-
-  if (Math.random() < (1 / 6.3)) {
-    return {
-      bonus:false,
-      premium:false,
-      premiumType:null,
-      lampTiming:null,
-      bonusPattern:null,
-      isMidCherry:false,
-      isConsecutiveCherry:false,
-      grape:true,
-      bell:false
-    };
-  }
-
-  return {
-    bonus:false,
-    premium:false,
-    premiumType:null,
-    lampTiming:null,
-    bonusPattern:null,
-    isMidCherry:false,
-    isConsecutiveCherry:false,
-    grape:false,
-    bell:false
-  };
+  if (Math.floor(Math.random() * 600) === 0) return { bonus:false, premium:false, premiumType:null, lampTiming:null, bonusPattern:null, isMidCherry:false, isConsecutiveCherry:false, grape:false, bell:true };
+  if (Math.random() < (1 / 6.3)) return { bonus:false, premium:false, premiumType:null, lampTiming:null, bonusPattern:null, isMidCherry:false, isConsecutiveCherry:false, grape:true, bell:false };
+  return { bonus:false, premium:false, premiumType:null, lampTiming:null, bonusPattern:null, isMidCherry:false, isConsecutiveCherry:false, grape:false, bell:false };
 }
 
 async function premiumPrelude(){
   if(!round.premium)return;
-
   if(round.premiumType==='blackout'){
-    app.classList.add('blackout');
-    setMsg('★ プレミア：パネル全消灯 ★');
-    await sleep(360);
-    app.classList.remove('blackout');
-    await sleep(180);
-    app.classList.add('blackout');
-    await sleep(240);
-    app.classList.remove('blackout');
-
-  }else if(round.premiumType==='blink'){
-    lamp('blue-blink');
-    setMsg('★ プレミア：青点滅 ★');
-    await sleep(760);
-
-  }else if(round.premiumType==='delay'){
-    setMsg('★ プレミア：遅れ始動 ★');
-    await sleep(520);
-
-  }else if(round.premiumType==='mellow'){
-    lamp('premium-mellow');
-    setMsg('★ 新プレミア：じんわり点灯 ★');
-    await sleep(1100);
-
-  }else if(round.premiumType==='colorShift'){
-    lamp('color-shift');
-    setMsg('★ プレミア：色変化 ★');
-    await sleep(900);
-  }
+    app.classList.add('blackout'); setMsg('★ プレミア：パネル全消灯 ★'); await sleep(360); app.classList.remove('blackout'); await sleep(180); app.classList.add('blackout'); await sleep(240); app.classList.remove('blackout');
+  }else if(round.premiumType==='blink'){ lamp('blue-blink'); setMsg('★ プレミア：青点滅 ★'); await sleep(760);
+  }else if(round.premiumType==='delay'){ lamp('premium'); setMsg('★ プレミア：遅れ始動 ★'); await sleep(520);
+  }else if(round.premiumType==='mellow'){ lamp('premium-mellow'); setMsg('★ 新プレミア：じんわり点灯 ★'); await sleep(1100);
+  }else if(round.premiumType==='colorShift'){ lamp('color-shift'); setMsg('★ プレミア：色変化 ★'); await sleep(900); }
 }
 
 function startReel(i,delay=0){
   const r=reels[i];
   setTimeout(()=>{
-    r.spinning=true;
-    r.stopped=false;
+    r.spinning=true; r.stopped=false;
     const loop=()=>{
-      if(!r.spinning)return;
-      r.offset+=r.speed;
-      if(r.offset>-h()) r.offset-=cyc(i);
-      r.el.style.transform=`translateY(${r.offset}px)`;
-      r.raf=requestAnimationFrame(loop);
-    };
-    r.raf=requestAnimationFrame(loop);
+      if(!r.spinning)return; r.offset+=r.speed; if(r.offset>-h()) r.offset-=cyc(i); r.el.style.transform=`translateY(${r.offset}px)`; r.raf=requestAnimationFrame(loop);
+    }; r.raf=requestAnimationFrame(loop);
   },delay);
 }
 
 function startAll(){
   const d=round&&round.premium&&round.premiumType==='delay'?520:0;
   reels.forEach((r,i)=>startReel(i,d+i*120));
-
   if(round && round.bonus && !round.bonusReady && !round.premium && round.lampTiming==='start') {
-    setTimeout(()=>{
-      lamp('blue');
-      setMsg("GOGO!点灯。ボーナス内部当選しました！次ゲームでボーナスが揃います。");
-    }, 220);
+    setTimeout(()=>{ lamp('blue'); setMsg("GOGO!点灯。ボーナス内部当選しました！次ゲームでボーナスが揃います。"); }, 220);
   }
 }
 
 function visibleCenterIndex(i){
-  const r=reels[i],hh=h(),centerPx=(window.innerWidth<=640?99:120)-r.offset;
-  const raw=Math.round(centerPx/hh);
+  const r=reels[i],hh=h(),centerPx=(window.innerWidth<=640?99:120)-r.offset; const raw=Math.round(centerPx/hh);
   return ((raw%REELS[i].length)+REELS[i].length)%REELS[i].length;
 }
 
 function snapToIndex(i,idx){
-  const r=reels[i];
-  r.centerIndex=idx;
-  r.offset=-(cyc(i)+idx*h()-h());
-  r.el.style.transform=`translateY(${r.offset}px)`;
+  const r=reels[i]; r.centerIndex=idx; r.offset=-(cyc(i)+idx*h()-h()); r.el.style.transform=`translateY(${r.offset}px)`;
 }
 
 function checkBonusAligned(testIdxs) {
@@ -548,78 +492,49 @@ function checkBonusAligned(testIdxs) {
   ];
   for (const line of lines) {
     const key = line.join(',');
-    if (key === 'seven,seven,seven' || key === 'seven,seven,bar' || key === 'seven,bar,bar') {
-      return true;
-    }
+    if (key === 'seven,seven,seven' || key === 'seven,seven,bar' || key === 'seven,bar,bar') return true;
   }
   return false;
 }
 
 function stopReel(i){
-  if(!inSpin)return;
-  const r=reels[i];
-  if(r.stopped||!r.spinning)return;
+  if(!inSpin)return; const r=reels[i]; if(r.stopped||!r.spinning)return;
+  r.spinning=false; if(r.raf)cancelAnimationFrame(r.raf);
 
-  r.spinning=false;
-  if(r.raf)cancelAnimationFrame(r.raf);
-
-  if(!stopOrder.includes(i)){
-    stopOrder.push(i);
-  }
-
+  if(!stopOrder.includes(i)) stopOrder.push(i);
   let idx = visibleCenterIndex(i);
 
   if(round.bonusReady){
     const targetSym = round.bonusPattern.line[i];
     let found = false;
     for (let s = 0; s <= REELS[i].length; s++) {
-      if (REELS[i][(idx + s) % REELS[i].length] === targetSym) {
-        idx = (idx + s) % REELS[i].length;
-        found = true;
-        break;
-      }
+      if (REELS[i][(idx + s) % REELS[i].length] === targetSym) { idx = (idx + s) % REELS[i].length; found = true; break; }
     }
     if (!found) {
       let slide = 0;
-      while ((REELS[i][idx] === 'seven' || REELS[i][idx] === 'bar') && slide < 4) {
-        idx = (idx + 1) % REELS[i].length;
-        slide++;
-      }
+      while ((REELS[i][idx] === 'seven' || REELS[i][idx] === 'bar') && slide < 4) { idx = (idx + 1) % REELS[i].length; slide++; }
     }
-
   } else if (round && round.bonus) {
     if (i === 0) {
-      if (round.isMidCherry) {
-        idx = 7;
-      } else if (round.isConsecutiveCherry) {
-        idx = Math.random() < 0.5 ? 6 : 15;
-      } else {
-        while(REELS[0][idx]==='cherry' || REELS[0][(idx-1+REELS[0].length)%REELS[0].length]==='cherry' || REELS[0][(idx+1)%REELS[0].length]==='cherry' || idx===7 || idx===16) {
-          idx = (idx + 1) % REELS[0].length;
-        }
-      }
+      if (round.isMidCherry) idx = 7;
+      else if (round.isConsecutiveCherry) idx = Math.random() < 0.5 ? 6 : 15;
+      else while(REELS[0][idx]==='cherry' || REELS[0][(idx-1+REELS[0].length)%REELS[0].length]==='cherry' || REELS[0][(idx+1)%REELS[0].length]==='cherry' || idx===7 || idx===16) idx = (idx + 1) % REELS[0].length;
     } else if (i === 1) {
       if (round.isMidCherry) {
-        const candidates = MID_CHERRY_STOPS[i];
-        idx = candidates.reduce((prev, curr) => Math.abs(curr - idx) < Math.abs(prev - idx) ? curr : prev);
+        idx = MID_CHERRY_STOPS[i].reduce((prev, curr) => Math.abs(curr - idx) < Math.abs(prev - idx) ? curr : prev);
       } else {
         let minSlide = 99;
         ['seven', 'bar'].forEach(sym => {
-          for (let s = 0; s <= 4; s++) {
-            if (REELS[1][(idx + s) % REELS[1].length] === sym) { if (s < minSlide) minSlide = s; }
-          }
+          for (let s = 0; s <= 4; s++) { if (REELS[1][(idx + s) % REELS[1].length] === sym) { if (s < minSlide) minSlide = s; } }
         });
         if (minSlide <= 4) idx = (idx + minSlide) % REELS[1].length;
       }
     } else if (i === 2) {
-      if (round.isMidCherry) {
-        idx = 3;
-      } else {
+      if (round.isMidCherry) idx = 3;
+      else {
         let minSlide = 99;
         ['seven', 'bar'].forEach(sym => {
-          for (let s = 0; s <= 4; s++) {
-            if (REELS[2][(idx + s) % REELS[2].length] === sym) { if (s < minSlide) minSlide = s; }
-          }
+          for (let s = 0; s <= 4; s++) { if (REELS[2][(idx + s) % REELS[2].length] === sym) { if (s < minSlide) minSlide = s; } }
         });
         if (minSlide <= 4) idx = (idx + minSlide) % REELS[2].length;
       }
@@ -628,473 +543,226 @@ function stopReel(i){
     if (!round.isMidCherry) {
       const stoppedCount = reels.filter(x => x.stopped).length;
       if (stoppedCount === 2) {
-        let testIdxs = [reels[0].centerIndex, reels[1].centerIndex, reels[2].centerIndex];
-        testIdxs[i] = idx;
-        let slide = 0;
-        while (checkBonusAligned(testIdxs) && slide < 4) {
-          idx = (idx + 1) % REELS[i].length;
-          testIdxs[i] = idx;
-          slide++;
-        }
-        while (checkBonusAligned(testIdxs)) {
-          idx = (idx + 1) % REELS[i].length;
-          testIdxs[i] = idx;
-        }
+        let testIdxs = [reels[0].centerIndex, reels[1].centerIndex, reels[2].centerIndex]; testIdxs[i] = idx; let slide = 0;
+        while (checkBonusAligned(testIdxs) && slide < 4) { idx = (idx + 1) % REELS[i].length; testIdxs[i] = idx; slide++; }
+        while (checkBonusAligned(testIdxs)) { idx = (idx + 1) % REELS[i].length; testIdxs[i] = idx; }
       }
     }
-
-    if (stopOrder.length === 1 && stopOrder[0] === 2) {
-      reversePushFlags.active = true;
-      reversePushFlags.isBonus = true;
-    }
+    if (stopOrder.length === 1 && stopOrder[0] === 2) { reversePushFlags.active = true; reversePushFlags.isBonus = true; }
 
   } else if (round.bell) {
     if (i === 0) idx = 0;
-    if (i === 1) {
-      const valid = [5, 13];
-      idx = valid.reduce((prev, curr) => Math.abs(curr - idx) < Math.abs(prev - idx) ? curr : prev);
-    }
-    if (i === 2) {
-      const valid = [3, 7, 11, 15, 19];
-      idx = valid.reduce((prev, curr) => Math.abs(curr - idx) < Math.abs(prev - idx) ? curr : prev);
-    }
+    if (i === 1) idx = [5, 13].reduce((prev, curr) => Math.abs(curr - idx) < Math.abs(prev - idx) ? curr : prev);
+    if (i === 2) idx = [3, 7, 11, 15, 19].reduce((prev, curr) => Math.abs(curr - idx) < Math.abs(prev - idx) ? curr : prev);
 
   } else if (round.grape) {
     if (stopOrder.length === 1 && stopOrder[0] === 2) {
-      idx = 1;
-      reversePushFlags.active = true;
-      reversePushFlags.isBonus = false;
-      reversePushFlags.grapeLine = Math.random() < 0.5 ? 'top' : 'diag';
+      idx = 1; reversePushFlags.active = true; reversePushFlags.isBonus = false; reversePushFlags.grapeLine = Math.random() < 0.5 ? 'top' : 'diag';
     }
-
     if (reversePushFlags.active) {
       if (i === 1) {
         let validIdxs = [];
-        if (reversePushFlags.grapeLine === 'top') validIdxs = [3, 7, 11, 15, 19];
-        else validIdxs = [2, 6, 10, 14, 18];
+        if (reversePushFlags.grapeLine === 'top') validIdxs = [3, 7, 11, 15, 19]; else validIdxs = [2, 6, 10, 14, 18];
         idx = validIdxs.reduce((prev, curr) => Math.abs(curr - idx) < Math.abs(prev - idx) ? curr : prev);
       } else if (i === 0) {
         let validIdxs = [];
-        if (reversePushFlags.grapeLine === 'top') validIdxs = [4, 6, 9, 11, 14, 16, 19, 0];
-        else validIdxs = [2, 4, 7, 9, 12, 14, 17, 19];
+        if (reversePushFlags.grapeLine === 'top') validIdxs = [4, 6, 9, 11, 14, 16, 19, 0]; else validIdxs = [2, 4, 7, 9, 12, 14, 17, 19];
         idx = validIdxs.reduce((prev, curr) => Math.abs(curr - idx) < Math.abs(prev - idx) ? curr : prev);
       }
     } else {
-      if (i === 0) {
-        const validIdxs = [3, 5, 8, 10, 13, 17, 20];
-        idx = validIdxs.reduce((prev, curr) => Math.abs(curr - idx) < Math.abs(prev - idx) ? curr : prev);
-      } else if (i === 1) {
-        const validIdxs = [2, 6, 10, 14, 18];
-        idx = validIdxs.reduce((prev, curr) => Math.abs(curr - idx) < Math.abs(prev - idx) ? curr : prev);
-      } else if (i === 2) {
-        const validIdxs = [0, 5, 9, 13, 17];
-        idx = validIdxs.reduce((prev, curr) => Math.abs(curr - idx) < Math.abs(prev - idx) ? curr : prev);
-      }
+      if (i === 0) idx = [3, 5, 8, 10, 13, 17, 20].reduce((prev, curr) => Math.abs(curr - idx) < Math.abs(prev - idx) ? curr : prev);
+      else if (i === 1) idx = [2, 6, 10, 14, 18].reduce((prev, curr) => Math.abs(curr - idx) < Math.abs(prev - idx) ? curr : prev);
+      else if (i === 2) idx = [0, 5, 9, 13, 17].reduce((prev, curr) => Math.abs(curr - idx) < Math.abs(prev - idx) ? curr : prev);
     }
-
   } else {
-    if (i === 0) {
-      while(REELS[0][idx]==='cherry' || REELS[0][(idx-1+REELS[0].length)%REELS[0].length]==='cherry' || REELS[0][(idx+1)%REELS[0].length]==='cherry' || idx===7 || idx===16) {
-        idx = (idx + 1) % REELS[0].length;
-      }
-    }
-    if (i === 1) {
-      while(REELS[1][idx]==='cherry' || REELS[1][(idx-1+REELS[1].length)%REELS[1].length]==='cherry' || REELS[1][(idx+1)%REELS[1].length]==='cherry') {
-        idx = (idx + 1) % REELS[1].length;
-      }
-    }
-    let basicShift = 0;
-    while((REELS[i][idx]==='seven' || REELS[i][idx]==='bar') && basicShift < 4){
-      idx = (idx + 1) % REELS[i].length;
-      basicShift++;
-    }
+    if (i === 0) while(REELS[0][idx]==='cherry' || REELS[0][(idx-1+REELS[0].length)%REELS[0].length]==='cherry' || REELS[0][(idx+1)%REELS[0].length]==='cherry' || idx===7 || idx===16) idx = (idx + 1) % REELS[0].length;
+    if (i === 1) while(REELS[1][idx]==='cherry' || REELS[1][(idx-1+REELS[1].length)%REELS[1].length]==='cherry' || REELS[1][(idx+1)%REELS[1].length]==='cherry') idx = (idx + 1) % REELS[1].length;
+    let basicShift = 0; while((REELS[i][idx]==='seven' || REELS[i][idx]==='bar') && basicShift < 4){ idx = (idx + 1) % REELS[i].length; basicShift++; }
   }
 
   snapToIndex(i,idx);
   r.stopped=true;
   stopBtns[i].disabled=true;
 
-  if(reels.every(x=>x.stopped)) finishRound();
+  // 停止音を鳴らす
+  playStopSound();
+
+  if(reels.every(x=>x.stopped)) {
+    stopSpinSound(); // 回転音を止める
+    finishRound();
+  }
 }
 
 function rowSymbols(i){
-  const arr=REELS[i];
-  const c=reels[i].centerIndex;
-  const len=arr.length;
+  const arr=REELS[i]; const c=reels[i].centerIndex; const len=arr.length;
   return [arr[(c-1+len)%len], arr[c], arr[(c+1)%len]];
 }
 
 function getPaylines(){
-  const l=rowSymbols(0);
-  const m=rowSymbols(1);
-  const r=rowSymbols(2);
+  const l=rowSymbols(0), m=rowSymbols(1), r=rowSymbols(2);
   return [
-    {name:'top', line:[l[0],m[0],r[0]]},
-    {name:'mid', line:[l[1],m[1],r[1]]},
-    {name:'bottom', line:[l[2],m[2],r[2]]},
-    {name:'diagDown', line:[l[0],m[1],r[2]]},
-    {name:'diagUp', line:[l[2],m[1],r[0]]}
+    {name:'top', line:[l[0],m[0],r[0]]}, {name:'mid', line:[l[1],m[1],r[1]]}, {name:'bottom', line:[l[2],m[2],r[2]]},
+    {name:'diagDown', line:[l[0],m[1],r[2]]}, {name:'diagUp', line:[l[2],m[1],r[0]]}
   ];
 }
 
 function evaluateCherry(){
-  const paylines=getPaylines();
-  const left=rowSymbols(0);
-  const result={payout:0,replay:0,cherryKind:null};
-
-  if(left[1]==='cherry'){
-    result.payout=2;
-    result.cherryKind='中段チェリー';
-    return result;
-  }
-
+  const paylines=getPaylines(); const left=rowSymbols(0); const result={payout:0,replay:0,cherryKind:null};
+  if(left[1]==='cherry'){ result.payout=2; result.cherryKind='中段チェリー'; return result; }
   const hasLeftCherry = (left[0]==='cherry' || left[2]==='cherry');
   if(!hasLeftCherry) return result;
-
   const doubleCherryLines = paylines.filter(p => p.line[0]==='cherry' && p.line[1]==='cherry');
-  if(doubleCherryLines.length>0){
-    result.payout=2;
-    result.cherryKind='連チェリー';
-    return result;
-  }
-
-  result.payout=2;
-  result.cherryKind='単チェリー';
-  return result;
+  if(doubleCherryLines.length>0){ result.payout=2; result.cherryKind='連チェリー'; return result; }
+  result.payout=2; result.cherryKind='単チェリー'; return result;
 }
 
 function evalLines(){
-  const paylines=getPaylines();
-  let payout=0, replay=0, bonusHit=null;
-  const hitLines=[];
-  let isFakeCombo = false;
-  let hasBarThree = false;
-
+  const paylines=getPaylines(); let payout=0, replay=0, bonusHit=null; const hitLines=[]; let isFakeCombo = false; let hasBarThree = false;
   for(const p of paylines){
     const key=p.line.join(',');
     if(key==='bar,bar,bar') hasBarThree = true;
     if(key==='bar,seven,bar' || key==='bar,bar,seven' || key==='seven,bar,bar') isFakeCombo = true;
-
-    for(const bp of BONUS_PATTERNS){
-      if(key===bp.line.join(',')){
-        bonusHit=bp;
-        payout+=bp.payout;
-        hitLines.push(`${p.name}:${bp.name}`);
-      }
-    }
+    for(const bp of BONUS_PATTERNS){ if(key===bp.line.join(',')){ bonusHit=bp; payout+=bp.payout; hitLines.push(`${p.name}:${bp.name}`); } }
     if(key==='grape,grape,grape'){payout+=7; hitLines.push(`${p.name}:grape`)}
     if(key==='pig,pig,pig'){replay+=1; hitLines.push(`${p.name}:replay`)}
     if(key==='bell,bell,bell'){payout+=15; hitLines.push(`${p.name}:bell`)}
   }
-
-  const cherry=evaluateCherry();
-  payout+=cherry.payout;
-  replay+=cherry.replay;
-
+  const cherry=evaluateCherry(); payout+=cherry.payout; replay+=cherry.replay;
   return {paylines,payout,replay,bonusHit,cherryKind:cherry.cherryKind,hitLines,isFakeCombo,hasBarThree};
 }
 
 function recordBonus(bp,premium){
-  state.totalHits++;
-  if(bp.type==='BIG') state.bb++;
-  else state.rb++;
-
+  state.totalHits++; if(bp.type==='BIG') state.bb++; else state.rb++;
   state.streak=state.zoneLeft>0?state.streak+1:1;
-  state.history.unshift({
-    type:bp.type,
-    game:state.currentGames,
-    premium,
-    time:new Date().toLocaleString('ja-JP')
-  });
-  state.history=state.history.slice(0,20);
-  state.zoneLeft=JUGUREN_GAMES;
-  if(premium) state.premiumCount++;
+  state.history.unshift({ type:bp.type, game:state.currentGames, premium, time:new Date().toLocaleString('ja-JP') });
+  state.history=state.history.slice(0,20); state.zoneLeft=JUGUREN_GAMES; if(premium) state.premiumCount++;
 }
 
 async function startSpin(){
   if(inSpin)return;
-  if(state.credits<BET&&state.replayStock<=0){
-    setMsg('クレジット不足です。クレジット+100で補充してください。');
-    return;
-  }
+  if(state.credits<BET&&state.replayStock<=0){ setMsg('クレジット不足です。クレジット+100で補充してください。'); return; }
 
-  stopOrder = [];
-  reversePushFlags = { active: false, isBonus: false, grapeLine: 'diag' };
+  // オーディオ初期化と再生
+  initAudio();
+  playLeverSound();
+  playSpinSound();
 
-  inSpin=true;
-  lit=false;
-  state.lastPayout=0;
+  stopOrder = []; reversePushFlags = { active: false, isBonus: false, grapeLine: 'diag' };
+  inSpin=true; lit=false; state.lastPayout=0;
 
   if (state.bonusStock > 0) {
-    state.bonusStock--;
-    state.bonusActive = true;
-    state.bonusPattern = BONUS_PATTERNS[0];
-    state.bonusPremium = true;
-    state.bonusPremiumType = 'colorShift';
-    
-    round = {
-      bonus:true,
-      bonusReady:true,
-      premium:true,
-      premiumType:'colorShift',
-      bonusPattern:BONUS_PATTERNS[0],
-      isMidCherry:false,
-      isConsecutiveCherry:false,
-      grape:false, bell:false
-    };
-    lamp('color-shift');
-    setMsg('🎉1G連ストック継続発動！超プレミアム演出と共にBIGが始まります！🎉');
-
+    state.bonusStock--; state.bonusActive = true; state.bonusPattern = BONUS_PATTERNS[0]; state.bonusPremium = true; state.bonusPremiumType = 'colorShift';
+    round = { bonus:true, bonusReady:true, premium:true, premiumType:'colorShift', bonusPattern:BONUS_PATTERNS[0], isMidCherry:false, isConsecutiveCherry:false, grape:false, bell:false };
+    lamp('color-shift'); setMsg('🎉1G連ストック継続発動！超プレミアム演出と共にBIGが始まります！🎉');
   } else if (state.bonusActive) {
     if (!state.bonusPattern) state.bonusPattern = pick(BONUS_PATTERNS);
-
     const isMidCherrySurprise = Math.floor(Math.random() * 15) === 0;
     if (isMidCherrySurprise) {
-      round = {
-        bonus:true,
-        bonusReady:false,
-        premium:true,
-        premiumType:'blink',
-        lampTiming:'after3',
-        bonusPattern:state.bonusPattern,
-        isMidCherry:true,
-        isConsecutiveCherry:false,
-        grape:false, bell:false,
-        is1G連StockActive:true
-      };
+      round = { bonus:true, bonusReady:false, premium:true, premiumType:'blink', lampTiming:'after3', bonusPattern:state.bonusPattern, isMidCherry:true, isConsecutiveCherry:false, grape:false, bell:false, is1G連StockActive:true };
     } else {
-      round = {
-        bonus:true,
-        bonusReady:true,
-        premium:state.bonusPremium,
-        premiumType:state.bonusPremiumType,
-        bonusPattern:state.bonusPattern,
-        isMidCherry:false,
-        isConsecutiveCherry:false,
-        grape:false, bell:false
-      };
+      round = { bonus:true, bonusReady:true, premium:state.bonusPremium, premiumType:state.bonusPremiumType, bonusPattern:state.bonusPattern, isMidCherry:false, isConsecutiveCherry:false, grape:false, bell:false };
     }
   } else {
     const rawRound = chooseRound();
     if (rawRound.bonus) {
-      state.bonusPattern = rawRound.bonusPattern;
-      state.bonusPremium = rawRound.premium;
-      state.bonusPremiumType = rawRound.premiumType;
-
-      round = {
-        bonus:true,
-        bonusReady:false,
-        premium:rawRound.premium,
-        premiumType:rawRound.premiumType,
-        lampTiming:rawRound.lampTiming,
-        bonusPattern:rawRound.bonusPattern,
-        isMidCherry:rawRound.isMidCherry,
-        isConsecutiveCherry:rawRound.isConsecutiveCherry,
-        grape:false, bell:false
-      };
+      state.bonusPattern = rawRound.bonusPattern; state.bonusPremium = rawRound.premium; state.bonusPremiumType = rawRound.premiumType;
+      round = { bonus:true, bonusReady:false, premium:rawRound.premium, premiumType:rawRound.premiumType, lampTiming:rawRound.lampTiming, bonusPattern:rawRound.bonusPattern, isMidCherry:rawRound.isMidCherry, isConsecutiveCherry:rawRound.isConsecutiveCherry, grape:false, bell:false };
     } else {
-      round = {
-        bonus:false,
-        bonusReady:false,
-        premium:false,
-        premiumType:null,
-        lampTiming:null,
-        bonusPattern:null,
-        isMidCherry:false,
-        isConsecutiveCherry:rawRound.isConsecutiveCherry,
-        grape:rawRound.grape,
-        bell:rawRound.bell
-      };
+      round = { bonus:false, bonusReady:false, premium:false, premiumType:null, lampTiming:null, bonusPattern:null, isMidCherry:false, isConsecutiveCherry:rawRound.isConsecutiveCherry, grape:rawRound.grape, bell:rawRound.bell };
     }
   }
 
-  if(state.replayStock>0){
-    state.replayStock--;
-    setMsg('リプレイ消化で今回はクレジットを使わずに回します。');
-  }else{
-    state.credits-=BET;
-    state.coinDiff-=BET;
-  }
+  if(state.replayStock>0){ state.replayStock--; setMsg('リプレイ消化で今回はクレジットを使わずに回します。');
+  }else{ state.credits-=BET; state.coinDiff-=BET; }
 
-  state.currentGames++;
-  state.totalGames++;
-  if(state.zoneLeft>0) state.zoneLeft--;
-  state.graph.push(state.coinDiff);
-  state.graph=state.graph.slice(-120);
-
-  updateUI();
-  stopBtns.forEach(b=>b.disabled=false);
+  state.currentGames++; state.totalGames++; if(state.zoneLeft>0) state.zoneLeft--;
+  state.graph.push(state.coinDiff); state.graph=state.graph.slice(-120);
+  updateUI(); stopBtns.forEach(b=>b.disabled=false);
 
   if (round.bonusReady) {
-    if (round.premium) lamp(getPremiumLampMode(round.premiumType));
-    else lamp('blue');
-  } else {
-    lamp('off');
-  }
+    if (round.premium) lamp(getPremiumLampMode(round.premiumType)); else lamp('blue');
+  } else { lamp('off'); }
 
   if (round.bonus && !round.bonusReady && round.lampTiming === 'lever') {
-    if (round.premium) {
-      await premiumPrelude();
-    } else {
-      lamp('blue');
-      setMsg('GOGO!点灯！レバーONでランプが光りました！次ゲームでボーナスが揃います。');
-    }
+    if (round.premium) { await premiumPrelude(); } else { lamp('blue'); setMsg('GOGO!点灯！レバーONでランプが光りました！次ゲームでボーナスが揃います。'); }
   }
 
   startAll();
 
-  if (round.is1G連StockActive) {
-    setMsg('リールに注目…！何かが引き込まれようとしています！');
-  } else if (!state.bonusActive && !round.bonusReady) {
-    setMsg(state.zoneLeft>0 ? `ジャグ連中 1/${JUGUREN_DENOM}。STOPを押して止めてください。` : `通常時 1/${NORMAL_DENOM}。STOPを押して止めてください。`);
-  } else if (!round.bonusReady) {
-    setMsg('STOPを押して止めてください。');
-  } else {
-    setMsg('GOGO!ランプ点灯中！どこを押しても勝手に滑ってボーナスが揃います！');
-  }
+  if (round.is1G連StockActive) { setMsg('リールに注目…！何かが引き込まれようとしています！');
+  } else if (!state.bonusActive && !round.bonusReady) { setMsg(state.zoneLeft>0 ? `ジャグ連中 1/${JUGUREN_DENOM}。STOPを押して止めてください。` : `通常時 1/${NORMAL_DENOM}。STOPを押して止めてください。`);
+  } else if (!round.bonusReady) { setMsg('STOPを押して止めてください。');
+  } else { setMsg('GOGO!ランプ点灯中！どこを押しても勝手に滑ってボーナスが揃います！'); }
 }
 
 function finishRound(){
+  stopSpinSound(); // 安全のため確実に停止
   const res=evalLines();
 
   if (round && round.is1G連StockActive) {
-    state.bonusStock = (state.bonusStock || 0) + 1;
-    state.credits += res.payout;
-    state.coinDiff += res.payout;
-    state.lastPayout = res.payout;
-
+    state.bonusStock = (state.bonusStock || 0) + 1; state.credits += res.payout; state.coinDiff += res.payout; state.lastPayout = res.payout;
     setMsg('🍒降臨！ボーナス狙い中に激レア【中段チェリー】成立！【1G連BIG確定】の極上の恩恵を獲得しました！次ゲームも即ボーナスです！');
-    inSpin = false;
-    saveState();
-    updateUI();
-    return;
+    inSpin = false; saveState(); updateUI(); return;
   }
 
   if (round && round.bonus && !round.bonusReady) {
     state.bonusActive = true;
-    if (round.premium) lamp(getPremiumLampMode(round.premiumType));
-    else lamp('blue');
-
+    if (round.premium) lamp(getPremiumLampMode(round.premiumType)); else lamp('blue');
     let msg = '★ GOGO!ランプ点灯！次ゲームでボーナスを狙ってください！';
 
     if (round.isMidCherry) {
-      if (state.zoneLeft > 0) {
-        state.bonusStock = (state.bonusStock || 0) + 1;
-        msg = '🍒プレミアム中段チェリー降臨！ジャグ連ゾーン中につき【BIG確定＋1G連ストック継続】の最強上乗せコンボです！ランプ点灯！';
-      } else {
-        msg = '🍒プレミアム中段チェリー降臨！【BIG確定】の最強出目です！GOGO!ランプ点灯、次ゲームで7を狙ってください！';
-      }
+      if (state.zoneLeft > 0) { state.bonusStock = (state.bonusStock || 0) + 1; msg = '🍒プレミアム中段チェリー降臨！ジャグ連ゾーン中につき【BIG確定＋1G連ストック継続】の最強上乗せコンボです！ランプ点灯！';
+      } else { msg = '🍒プレミアム中段チェリー降臨！【BIG確定】の最強出目です！GOGO!ランプ点灯、次ゲームで7を狙ってください！'; }
     } else if (round.isMidCherry || res.cherryKind === '中段チェリー') {
       msg = '🍒究極の中段チェリー降臨！【BIG確定】の歓喜の瞬間！GOGO!ランプ点灯、次ゲームで7を狙ってください！';
     } else if (res.hasBarThree || res.isFakeCombo) {
       msg = '★ リーチ目降臨！GOGO!ランプ点灯！次ゲームでボーナスを狙ってください！';
     }
-
     setMsg(msg);
-
-    if (res.payout > 0) {
-      state.credits += res.payout;
-      state.coinDiff += res.payout;
-      state.lastPayout = res.payout;
-    }
-
-    inSpin = false;
-    saveState();
-    updateUI();
-    return;
+    if (res.payout > 0) { state.credits += res.payout; state.coinDiff += res.payout; state.lastPayout = res.payout; }
+    inSpin = false; saveState(); updateUI(); return;
   }
 
   if (state.bonusActive && round.bonusReady) {
     if (res.bonusHit) {
       const premium = round.premium && res.bonusHit.type === 'BIG';
       recordBonus(res.bonusHit, premium);
-
-      state.credits += res.bonusHit.payout;
-      state.coinDiff += res.bonusHit.payout;
-      state.lastPayout = res.bonusHit.payout;
-      state.graph.push(state.coinDiff);
-      state.graph = state.graph.slice(-120);
-
-      state.bonusActive = false;
-      state.bonusPattern = null;
-      state.bonusPremium = false;
-      state.bonusPremiumType = null;
+      state.credits += res.bonusHit.payout; state.coinDiff += res.bonusHit.payout; state.lastPayout = res.bonusHit.payout;
+      state.graph.push(state.coinDiff); state.graph = state.graph.slice(-120);
+      state.bonusActive = false; state.bonusPattern = null; state.bonusPremium = false; state.bonusPremiumType = null;
       lamp('off');
-
-      if ((state.bonusStock || 0) > 0) {
-        setMsg(`🎉 ${res.bonusHit.type==='BIG'?'BIG':'REG'}獲得！さらに【1G連ストック】が残っています！次ゲーム、レバーONで即BIG継続確定！`);
-      } else {
-        setMsg(`🎉 ${res.bonusHit.type==='BIG'?'BIG':'REG'}確定！ ${res.bonusHit.payout}枚獲得。10Gのジャグ連チャンスへ！`);
-      }
+      if ((state.bonusStock || 0) > 0) { setMsg(`🎉 ${res.bonusHit.type==='BIG'?'BIG':'REG'}獲得！さらに【1G連ストック】が残っています！次ゲーム、レバーONで即BIG継続確定！`);
+      } else { setMsg(`🎉 ${res.bonusHit.type==='BIG'?'BIG':'REG'}確定！ ${res.bonusHit.payout}枚獲得。10Gのジャグ連チャンスへ！`); }
     } else {
       if(res.replay>0) state.replayStock+=res.replay;
-      if(res.payout>0){
-        state.credits+=res.payout;
-        state.coinDiff+=res.payout;
-        state.lastPayout=res.payout;
-        state.graph.push(state.coinDiff);
-        state.graph = state.graph.slice(-120);
-      }
+      if(res.payout>0){ state.credits+=res.payout; state.coinDiff+=res.payout; state.lastPayout=res.payout; state.graph.push(state.coinDiff); state.graph = state.graph.slice(-120); }
       setMsg('ボーナスを引き込めませんでした！ランプは点灯中ですので、次ゲームでしっかりボーナス（7やBAR）を狙ってください！');
     }
-
-    inSpin = false;
-    saveState();
-    updateUI();
-    return;
+    inSpin = false; saveState(); updateUI(); return;
   }
 
   if(res.replay>0) state.replayStock+=res.replay;
-  if(res.payout>0){
-    state.credits+=res.payout;
-    state.coinDiff+=res.payout;
-    state.lastPayout=res.payout;
-    state.graph.push(state.coinDiff);
-    state.graph=state.graph.slice(-120);
-  }
+  if(res.payout>0){ state.credits+=res.payout; state.coinDiff+=res.payout; state.lastPayout=res.payout; state.graph.push(state.coinDiff); state.graph=state.graph.slice(-120); }
 
-  if (res.hitLines.some(l => l.includes('bell'))) {
-    setMsg('🔔 ベル揃い！ 15枚獲得！大満足の役です。');
-  } else if(res.cherryKind==='連チェリー'){
-    setMsg('連チェリー成立！ 2枚獲得。(チェリー重複なら次ゲームで光るかも…！？)');
-  } else if(res.cherryKind==='中段チェリー'){
-    setMsg('🍒中段チェリー成立！ 100%ボーナス確定！');
-  } else if(res.replay>0&&res.payout>0){
-    setMsg(`${res.cherryKind?res.cherryKind+' / ':''}ブドウとリプレイが揃いました。`);
-  } else if(res.replay>0){
-    setMsg('リプレイ！次ゲームはクレジットを消費しません。');
-  } else if(res.payout>0){
-    setMsg(`${res.cherryKind?res.cherryKind+' / ':''}小役揃い！ ${res.payout}枚獲得。`);
-  } else if(res.cherryKind){
-    setMsg(`${res.cherryKind}！ ${res.payout}枚獲得。`);
-  } else {
-    setMsg(state.zoneLeft>0 ? 'ハズレ (ジャグ連中)' : 'ハズレ');
-  }
+  if (res.hitLines.some(l => l.includes('bell'))) { setMsg('🔔 ベル揃い！ 15枚獲得！大満足の役です。');
+  } else if(res.cherryKind==='連チェリー'){ setMsg('連チェリー成立！ 2枚獲得。(チェリー重複なら次ゲームで光るかも…！？)');
+  } else if(res.cherryKind==='中段チェリー'){ setMsg('🍒中段チェリー成立！ 100%ボーナス確定！');
+  } else if(res.replay>0&&res.payout>0){ setMsg(`${res.cherryKind?res.cherryKind+' / ':''}ブドウとリプレイが揃いました。`);
+  } else if(res.replay>0){ setMsg('リプレイ！次ゲームはクレジットを消費しません。');
+  } else if(res.payout>0){ setMsg(`${res.cherryKind?res.cherryKind+' / ':''}小役揃い！ ${res.payout}枚獲得。`);
+  } else if(res.cherryKind){ setMsg(`${res.cherryKind}！ ${res.payout}枚獲得。`);
+  } else { setMsg(state.zoneLeft>0 ? 'ハズレ (ジャグ連中)' : 'ハズレ'); }
 
-  inSpin=false;
-  saveState();
-  updateUI();
+  inSpin=false; saveState(); updateUI();
 }
 
-spinBtn.addEventListener('click', startSpin);
-stopBtns.forEach((b, i) => b.addEventListener('click', () => stopReel(i)));
+spinBtn.addEventListener('click', () => { initAudio(); startSpin(); });
+stopBtns.forEach((b, i) => b.addEventListener('click', () => { initAudio(); stopReel(i); }));
 
-document.getElementById('addCreditBtn').addEventListener('click', () => {
-  state.credits += 100;
-  updateUI();
-  setMsg('クレジットを100追加しました。');
-});
+document.getElementById('addCreditBtn').addEventListener('click', () => { state.credits += 100; updateUI(); setMsg('クレジットを100追加しました。'); });
+document.getElementById('resetBtn').addEventListener('click', () => { if(confirm('プレイデータを本当にリセットしますか？')){ localStorage.removeItem(STORAGE_KEY); location.reload(); } });
 
-document.getElementById('resetBtn').addEventListener('click', () => {
-  if(confirm('プレイデータを本当にリセットしますか？')){
-    localStorage.removeItem(STORAGE_KEY);
-    location.reload();
-  }
-});
-
-initReels();
-updateUI();
-lamp('off');
+initReels(); updateUI(); lamp('off');
 </script>
 </body>
 </html>
