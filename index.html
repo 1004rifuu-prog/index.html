@@ -209,8 +209,14 @@ function playPekaSound() {
   // ※AIというシステム上、音声ファイルを直接受け取ることができないため、
   // 仮のファイル名「peka.mp3」を読み込んでいます。
   // ご用意いただいた実際の音声ファイルのファイル名（またはパス）に書き換えてください！
-  const pekaAudio = new Audio('ziyagura-gako.mp3'); 
-  pekaAudio.volume = 0.6; // 音量は60%に設定しています
+const pekaAudio = new Audio('ziyagura-gako.mp3'); 
+pekaAudio.preload = 'auto'; // 事前読み込みを確実にする設定
+
+// 2.【2つ目のパーツ：関数の中身をこれに書き換える】
+function playPekaSound() {
+  if (!pekaAudio) return;
+  pekaAudio.volume = 0.6;     // 音量を60%に設定
+  pekaAudio.currentTime = 0; // 再生位置を毎回パッと先頭に戻す
   pekaAudio.play().catch(e => console.log('Audio play failed:', e));
 }
 // ==========================================
