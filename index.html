@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-<title>JUGGLER風オリジナル完成版 (サウンド＆脳汁特化版)</title>
+<title>JUGGLER風オリジナル完成版 (制御・確率修正版)</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:"Hiragino Sans","Yu Gothic",sans-serif;background:radial-gradient(circle at top,#3a0d62 0%,#19061f 48%,#050108 100%);color:#fff;min-height:100vh;padding:14px;overscroll-behavior-y:none}
@@ -104,7 +104,7 @@ button{touch-action:manipulation}
         <button class="bet-button" disabled>BET</button>
       </div>
 
-      <div id="message" class="message">サウンド＆脳汁特化版！ペカると確定音が鳴り響きます！</div>
+      <div id="message" class="message">サウンド＆脳汁特化版！生入り完全防止＆中段チェリー(1/16384)調整完了！</div>
 
       <div class="footer-actions">
         <button id="addCreditBtn" class="mini-action orange">クレジット+100</button>
@@ -118,7 +118,7 @@ button{touch-action:manipulation}
 
 <script>
 // ==========================================
-// Web Audio API サウンド処理 (回転音・各種効果音)
+// Web Audio API サウンド処理
 // ==========================================
 let audioCtx = null;
 let spinOsc = null;
@@ -154,7 +154,7 @@ function playSpinSound() {
   spinOsc = audioCtx.createOscillator();
   spinGain = audioCtx.createGain();
   spinOsc.type = 'triangle';
-  spinOsc.frequency.setValueAtTime(80, audioCtx.currentTime); // 低い回転待機音
+  spinOsc.frequency.setValueAtTime(80, audioCtx.currentTime);
   spinGain.gain.setValueAtTime(0.1, audioCtx.currentTime);
   spinOsc.connect(spinGain);
   spinGain.connect(audioCtx.destination);
@@ -184,7 +184,6 @@ function playStopSound() {
   osc.stop(audioCtx.currentTime + 0.1);
 }
 
-// 本家のガコッ！音のみを再現
 function playPekaSound() {
   if (!audioCtx) return;
   const now = audioCtx.currentTime;
@@ -200,31 +199,39 @@ function playPekaSound() {
   gacoGain.connect(audioCtx.destination);
   gacoOsc.start(now);
   gacoOsc.stop(now + 0.1);
-}
 
-// ブドウ揃い（払い出し）音の追加
-function playGrapeSound() {
-  if (!audioCtx) return;
-  const now = audioCtx.currentTime;
-  const count = 7; // 7枚払い出しに合わせて7回パルスを刻む
-  for (let i = 0; i < count; i++) {
-    const time = now + i * 0.1;
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = 'square'; // レトロなピコピコ感のある矩形波
-    osc.frequency.setValueAtTime(550, time);
-    gain.gain.setValueAtTime(0.15, time);
-    gain.gain.exponentialRampToValueAtTime(0.01, time + 0.07);
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.start(time);
-    osc.stop(time + 0.07);
-  }
+  const osc = audioCtx.createOscillator();
+  const osc2 = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+
+  osc.type = 'sine';
+  osc2.type = 'sine';
+
+  osc.frequency.setValueAtTime(1000, now + 0.05);
+  osc.frequency.exponentialRampToValueAtTime(2500, now + 0.3);
+  osc.frequency.linearRampToValueAtTime(2600, now + 1.2);
+
+  osc2.frequency.setValueAtTime(1020, now + 0.05);
+  osc2.frequency.exponentialRampToValueAtTime(2530, now + 0.3);
+  osc2.frequency.linearRampToValueAtTime(2630, now + 1.2);
+
+  gain.gain.setValueAtTime(0, now + 0.05);
+  gain.gain.linearRampToValueAtTime(0.3, now + 0.1);
+  gain.gain.linearRampToValueAtTime(0.3, now + 1.0);
+  gain.gain.linearRampToValueAtTime(0, now + 1.5);
+
+  osc.connect(gain);
+  osc2.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  osc.start(now + 0.05);
+  osc2.start(now + 0.05);
+  osc.stop(now + 1.5);
+  osc2.stop(now + 1.5);
 }
 // ==========================================
 
-
-const STORAGE_KEY='juggler_complete_v9';
+const STORAGE_KEY='juggler_complete_v10';
 const BET=3,NORMAL_DENOM=99,JUGUREN_DENOM=8,JUGUREN_GAMES=10,PREMIUM_RATE=0.20;
 
 const REELS=[
@@ -404,22 +411,25 @@ function pick(arr){return arr[Math.floor(Math.random()*arr.length)]}
 function denomNow(){return state.zoneLeft>0?JUGUREN_DENOM:NORMAL_DENOM}
 
 function chooseRound(){
+  // 1. 中段チェリー確率を厳密に1/16384にする
+  const isMidCherry = Math.floor(Math.random() * 16384) === 0;
+  if (isMidCherry) {
+    const bp = BONUS_PATTERNS[0]; // BIG
+    return { bonus:true, premium:true, premiumType:pick(PREMIUM_TYPES), lampTiming:'after3', bonusPattern:bp, isMidCherry:true, isConsecutiveCherry:false, grape:false, bell:false };
+  }
+
+  // 2. 通常のチェリー抽選 (1/18)
   const isCherry = Math.floor(Math.random() * 18) === 0;
   if (isCherry) {
-    const isMid = Math.floor(Math.random() * 7) === 0;
-    if (isMid) {
-      const bp = BONUS_PATTERNS[0];
-      return { bonus:true, premium:true, premiumType:pick(PREMIUM_TYPES), lampTiming:'after3', bonusPattern:bp, isMidCherry:true, isConsecutiveCherry:false, grape:false, bell:false };
+    const isHit = Math.random() < 0.12;
+    if (isHit) {
+      return { bonus:true, premium:false, premiumType:null, lampTiming:'after3', bonusPattern:pick(BONUS_PATTERNS), isMidCherry:false, isConsecutiveCherry:true, grape:false, bell:false };
     } else {
-      const isHit = Math.random() < 0.12;
-      if (isHit) {
-        return { bonus:true, premium:false, premiumType:null, lampTiming:'after3', bonusPattern:pick(BONUS_PATTERNS), isMidCherry:false, isConsecutiveCherry:true, grape:false, bell:false };
-      } else {
-        return { bonus:false, premium:false, premiumType:null, lampTiming:null, bonusPattern:null, isMidCherry:false, isConsecutiveCherry:true, grape:false, bell:false };
-      }
+      return { bonus:false, premium:false, premiumType:null, lampTiming:null, bonusPattern:null, isMidCherry:false, isConsecutiveCherry:true, grape:false, bell:false };
     }
   }
 
+  // 3. 単独ボーナスおよびその他の小役抽選
   const hit=Math.floor(Math.random()*denomNow())===0;
   if(hit){
     const bp=pick(BONUS_PATTERNS); const premium=(bp.type==='BIG' && Math.random()<PREMIUM_RATE);
@@ -528,15 +538,6 @@ function stopReel(i){
         if (minSlide <= 4) idx = (idx + minSlide) % REELS[2].length;
       }
     }
-
-    if (!round.isMidCherry) {
-      const stoppedCount = reels.filter(x => x.stopped).length;
-      if (stoppedCount === 2) {
-        let testIdxs = [reels[0].centerIndex, reels[1].centerIndex, reels[2].centerIndex]; testIdxs[i] = idx; let slide = 0;
-        while (checkBonusAligned(testIdxs) && slide < 4) { idx = (idx + 1) % REELS[i].length; testIdxs[i] = idx; slide++; }
-        while (checkBonusAligned(testIdxs)) { idx = (idx + 1) % REELS[i].length; testIdxs[i] = idx; }
-      }
-    }
     if (stopOrder.length === 1 && stopOrder[0] === 2) { reversePushFlags.active = true; reversePushFlags.isBonus = true; }
 
   } else if (round.bell) {
@@ -569,15 +570,32 @@ function stopReel(i){
     let basicShift = 0; while((REELS[i][idx]==='seven' || REELS[i][idx]==='bar') && basicShift < 4){ idx = (idx + 1) % REELS[i].length; basicShift++; }
   }
 
+  // --- 生入り完全防止処理 (第3停止時のみ) ---
+  const currentStoppedCount = reels.filter(x => x.stopped).length;
+  if (!round.bonusReady && currentStoppedCount === 2) {
+    let testIdxs = [reels[0].centerIndex, reels[1].centerIndex, reels[2].centerIndex];
+    testIdxs[i] = idx;
+    let slide = 0;
+    while (checkBonusAligned(testIdxs) && slide < 4) {
+      idx = (idx + 1) % REELS[i].length;
+      testIdxs[i] = idx;
+      slide++;
+    }
+    // それでも揃ってしまう万が一の事態を防ぐための強制回避ループ
+    while (checkBonusAligned(testIdxs)) {
+      idx = (idx + 1) % REELS[i].length;
+      testIdxs[i] = idx;
+    }
+  }
+
   snapToIndex(i,idx);
   r.stopped=true;
   stopBtns[i].disabled=true;
 
-  // 停止音を鳴らす
   playStopSound();
 
   if(reels.every(x=>x.stopped)) {
-    stopSpinSound(); // 回転音を止める
+    stopSpinSound();
     finishRound();
   }
 }
@@ -631,7 +649,6 @@ async function startSpin(){
   if(inSpin)return;
   if(state.credits<BET&&state.replayStock<=0){ setMsg('クレジット不足です。クレジット+100で補充してください。'); return; }
 
-  // オーディオ初期化と再生
   initAudio();
   playLeverSound();
   playSpinSound();
@@ -644,13 +661,9 @@ async function startSpin(){
     round = { bonus:true, bonusReady:true, premium:true, premiumType:'colorShift', bonusPattern:BONUS_PATTERNS[0], isMidCherry:false, isConsecutiveCherry:false, grape:false, bell:false };
     lamp('color-shift'); setMsg('🎉1G連ストック継続発動！超プレミアム演出と共にBIGが始まります！🎉');
   } else if (state.bonusActive) {
+    // ボーナス中（ランプ点灯中・図柄狙いゲーム）は、重複や中段チェリーなどの追加抽選を一切排除
     if (!state.bonusPattern) state.bonusPattern = pick(BONUS_PATTERNS);
-    const isMidCherrySurprise = Math.floor(Math.random() * 15) === 0;
-    if (isMidCherrySurprise) {
-      round = { bonus:true, bonusReady:false, premium:true, premiumType:'blink', lampTiming:'after3', bonusPattern:state.bonusPattern, isMidCherry:true, isConsecutiveCherry:false, grape:false, bell:false, is1G連StockActive:true };
-    } else {
-      round = { bonus:true, bonusReady:true, premium:state.bonusPremium, premiumType:state.bonusPremiumType, bonusPattern:state.bonusPattern, isMidCherry:false, isConsecutiveCherry:false, grape:false, bell:false };
-    }
+    round = { bonus:true, bonusReady:true, premium:state.bonusPremium, premiumType:state.bonusPremiumType, bonusPattern:state.bonusPattern, isMidCherry:false, isConsecutiveCherry:false, grape:false, bell:false };
   } else {
     const rawRound = chooseRound();
     if (rawRound.bonus) {
@@ -678,26 +691,14 @@ async function startSpin(){
 
   startAll();
 
-  if (round.is1G連StockActive) { setMsg('リールに注目…！何かが引き込まれようとしています！');
-  } else if (!state.bonusActive && !round.bonusReady) { setMsg(state.zoneLeft>0 ? `ジャグ連中 1/${JUGUREN_DENOM}。STOPを押して止めてください。` : `通常時 1/${NORMAL_DENOM}。STOPを押して止めてください。`);
+  if (!state.bonusActive && !round.bonusReady) { setMsg(state.zoneLeft>0 ? `ジャグ連中 1/${JUGUREN_DENOM}。STOPを押して止めてください。` : `通常時 1/${NORMAL_DENOM}。STOPを押して止めてください。`);
   } else if (!round.bonusReady) { setMsg('STOPを押して止めてください。');
   } else { setMsg('GOGO!ランプ点灯中！どこを押しても勝手に滑ってボーナスが揃います！'); }
 }
 
 function finishRound(){
-  stopSpinSound(); // 安全のため確実に停止
+  stopSpinSound(); 
   const res=evalLines();
-
-  // ブドウが成立している場合はサウンドを再生
-  if (res.hitLines.some(l => l.includes('grape'))) {
-    playGrapeSound();
-  }
-
-  if (round && round.is1G連StockActive) {
-    state.bonusStock = (state.bonusStock || 0) + 1; state.credits += res.payout; state.coinDiff += res.payout; state.lastPayout = res.payout;
-    setMsg('🍒降臨！ボーナス狙い中に激レア【中段チェリー】成立！【1G連BIG確定】の極上の恩恵を獲得しました！次ゲームも即ボーナスです！');
-    inSpin = false; saveState(); updateUI(); return;
-  }
 
   if (round && round.bonus && !round.bonusReady) {
     state.bonusActive = true;
@@ -705,10 +706,8 @@ function finishRound(){
     let msg = '★ GOGO!ランプ点灯！次ゲームでボーナスを狙ってください！';
 
     if (round.isMidCherry) {
-      if (state.zoneLeft > 0) { state.bonusStock = (state.bonusStock || 0) + 1; msg = '🍒プレミアム中段チェリー降臨！ジャグ連ゾーン中につき【BIG確定＋1G連ストック継続】の最強上乗せコンボです！ランプ点灯！';
-      } else { msg = '🍒プレミアム中段チェリー降臨！【BIG確定】の最強出目です！GOGO!ランプ点灯、次ゲームで7を狙ってください！'; }
-    } else if (round.isMidCherry || res.cherryKind === '中段チェリー') {
-      msg = '🍒究極の中段チェリー降臨！【BIG確定】の歓喜の瞬間！GOGO!ランプ点灯、次ゲームで7を狙ってください！';
+      if (state.zoneLeft > 0) { state.bonusStock = (state.bonusStock || 0) + 1; msg = '🍒プレミアム中段チェリー(1/16384)降臨！ジャグ連ゾーン中につき【BIG確定＋1G連ストック継続】獲得！';
+      } else { msg = '🍒プレミアム中段チェリー(1/16384)降臨！【BIG確定】の最強出目です！GOGO!ランプ点灯、次ゲームで7を狙ってください！'; }
     } else if (res.hasBarThree || res.isFakeCombo) {
       msg = '★ リーチ目降臨！GOGO!ランプ点灯！次ゲームでボーナスを狙ってください！';
     }
@@ -740,7 +739,7 @@ function finishRound(){
 
   if (res.hitLines.some(l => l.includes('bell'))) { setMsg('🔔 ベル揃い！ 15枚獲得！大満足の役です。');
   } else if(res.cherryKind==='連チェリー'){ setMsg('連チェリー成立！ 2枚獲得。(チェリー重複なら次ゲームで光るかも…！？)');
-  } else if(res.cherryKind==='中段チェリー'){ setMsg('🍒中段チェリー成立！ 100%ボーナス確定！');
+  } else if(res.cherryKind==='中段チェリー'){ setMsg('🍒通常時の中段チェリー成立！ 100%ボーナス確定！');
   } else if(res.replay>0&&res.payout>0){ setMsg(`${res.cherryKind?res.cherryKind+' / ':''}ブドウとリプレイが揃いました。`);
   } else if(res.replay>0){ setMsg('リプレイ！次ゲームはクレジットを消費しません。');
   } else if(res.payout>0){ setMsg(`${res.cherryKind?res.cherryKind+' / ':''}小役揃い！ ${res.payout}枚獲得。`);
